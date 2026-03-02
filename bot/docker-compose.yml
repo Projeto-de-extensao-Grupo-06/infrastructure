@@ -47,10 +47,39 @@ services:
       N8N_LOG_LEVEL: debug
       N8N_SECURE_COOKIE: false
       N8N_COMMUNITY_PACKAGES_ALLOW_TOOL_USAGE: true
+      BOT_SECRET: "solarize_whatsapp_bot_super_secret"
+      N8N_BLOCK_ENV_ACCESS_IN_NODE: "false"
     volumes:
       - n8n_data:/home/node/.n8n
     ports:
       - "5678:5678"
+
+  backend-service:
+    build:
+      context: ../../springboot-web-backend
+      dockerfile: Dockerfile
+    platform: linux/amd64
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/solarize
+      SPRING_DATASOURCE_USERNAME: solarize
+      SPRING_DATASOURCE_PASSWORD: "06241234"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      EMAIL: "dummy@email.com"
+      PASSWORD_EMAIL: "dummy"
+      SERVER_PORT: 8000
+      BOT_SECRET: "solarize_whatsapp_bot_super_secret"
+    ports:
+      - "8000:8000"
+    networks:
+      - default
+      - storage
+
+networks:
+  storage:
+    external: true
+    name: storage_default
 
 volumes:
   pgdata:

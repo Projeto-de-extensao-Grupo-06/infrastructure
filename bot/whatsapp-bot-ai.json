@@ -1,0 +1,389 @@
+{
+    "name": "Bot Solar AI - Vendedor Virtual",
+    "nodes": [
+        {
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "webhook",
+                "options": {}
+            },
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 2.1,
+            "position": [
+                -1408,
+                1376
+            ],
+            "id": "6d3d7c9b-5afd-450f-8365-fd64b4221dff",
+            "name": "Webhook WAHA (Entrada)",
+            "webhookId": "ai-bot-5b83-4968-a5eb-fd391d41test"
+        },
+        {
+            "parameters": {
+                "assignments": {
+                    "assignments": [
+                        {
+                            "id": "e7225c5d-31eb-4da0-96f3-f938aeeffaa3",
+                            "name": "chatId",
+                            "value": "={{ $json.body.payload.from }}",
+                            "type": "string"
+                        },
+                        {
+                            "id": "5dc1a884-ec40-42ec-adce-aa3b3f2c52fb",
+                            "name": "message",
+                            "value": "={{ $json.body.payload.body }}",
+                            "type": "string"
+                        },
+                        {
+                            "id": "60ca4a84-f25b-42fa-b7ed-b34af2a08dc3",
+                            "name": "fromMe",
+                            "value": "={{ $json.body.payload.fromMe }}",
+                            "type": "boolean"
+                        },
+                        {
+                            "id": "a63cd334-081c-4b36-bef5-e4d6a7ed3498",
+                            "name": "phone",
+                            "value": "={{ $json.body.payload.from.replace('@c.us', '').replace('@lid', '') }}",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "type": "n8n-nodes-base.set",
+            "typeVersion": 3.4,
+            "position": [
+                -1184,
+                1376
+            ],
+            "id": "8f7411ef-c12d-4498-8ab5-b3f460ec672d",
+            "name": "Extrair Dados"
+        },
+        {
+            "parameters": {
+                "conditions": {
+                    "boolean": [
+                        {
+                            "value1": "={{ $json.fromMe }}"
+                        }
+                    ],
+                    "string": [
+                        {
+                            "value1": "={{ $json.chatId }}",
+                            "operation": "notEndsWith",
+                            "value2": "=@g.us"
+                        }
+                    ]
+                }
+            },
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 1,
+            "position": [
+                -976,
+                1376
+            ],
+            "id": "8bade0ff-3118-465d-9c1e-964b09e28244",
+            "name": "Apenas Clientes"
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "http://backend-service:8000/api/auth/bot/login",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "x-bot-secret",
+                            "value": "={{ $env.BOT_SECRET }}"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                -752,
+                1376
+            ],
+            "id": "5e8966f2-4052-4cd2-a9bb-3f1289fcaa00",
+            "name": "Autenticar Bot (JWT)"
+        },
+        {
+            "parameters": {
+                "promptType": "define",
+                "text": "={{ $('Extrair Dados').item.json.message }}",
+                "options": {
+                    "systemMessage": "Você é o Assistente Virtual Solarize, um vendedor especialista em Energia Solar Fotovoltaica.\nSeu objetivo é qualificar leads de forma natural e amigável pelo WhatsApp, extraindo os dados necessários para que os engenheiros façam um orçamento técnico avançado.\n\nAS 4 INFORMAÇÕES QUE VOCÊ PRECISA EXTRAIR (obrigatoriamente nesta ordem se a pessoa for evasiva, mas seja conversacional):\n1. Nome completo.\n2. Valor médio da conta de luz mensal (em R$). Se der em kWh tentar pedir em R$ avisando que a estimativa foca no financeiro, mas aceitar se insistir.\n3. Cidade / Estado da instalação.\n4. Tipo de imóvel (residencial, comercial ou rural) e tipo de telhado da casa (cerâmica, fibrocimento, laje, metálico).\n\n# Ferramentas (Tools)\nUse a ferramenta apropriada quando precisar armazenar informações permanentes no sistema:\n* USE A FERRAMENTA 'verificar_cliente_existe' assim que tiver o Nome de uma pessoa que disse 'Oi', passando o telefone para ver se ele já está no nosso banco.\n* USE A FERRAMENTA 'calcular_e_criar_projeto' SOMENTE QUANDO você tiver validado com confiança as 4 informações acima com o usuário e ele disser que está tudo certo. NUNCA CHUTE DADOS. Quando você chamar essa ferramenta, ela criará o lead no CRM e te devolverá dados sobre KwP, Custo e Payback. Use esses dados retornados e crie uma bela mensagem de encerramento para o cliente informando-o e perguntando se um consultor humano pode ligar para ele.\n* USE A FERRAMENTA 'Atualizar_Status_Contato' quando o usuário disser se quer ou não falar com um humano após receber a estimativa.\n\nREGRA DE OURO: Não use formatação em negrito/itálico que dependa de HTML, use a sintaxe do WhatsApp (asterisco para *negrito*, underscore para _itálico_)."
+                }
+            },
+            "type": "@n8n/n8n-nodes-langchain.agent",
+            "typeVersion": 1.7,
+            "position": [
+                -528,
+                1376
+            ],
+            "id": "8c4ca012-fb1a-4d17-ae8a-8377c8a0c703",
+            "name": "Vendedor AI Solarize"
+        },
+        {
+            "parameters": {
+                "resource": "Chatting",
+                "operation": "Send Text",
+                "session": "default",
+                "chatId": "={{ $('Extrair Dados').item.json.chatId }}",
+                "text": "={{ $json.output }}",
+                "requestOptions": {}
+            },
+            "type": "n8n-nodes-waha.WAHA",
+            "typeVersion": 202411,
+            "position": [
+                -128,
+                1376
+            ],
+            "id": "caea8843-3988-42aa-a7bd-0523c8711cdb",
+            "name": "WAHA: Enviar Resposta AI",
+            "credentials": {
+                "wahaApi": {
+                    "id": "9j7lU2CkkdwjGcVk",
+                    "name": "WAHA account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "sessionIdType": "customKey",
+                "sessionKey": "={{ $('Extrair Dados').first().json.chatId }}",
+                "sessionTtl": 1440
+            },
+            "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
+            "typeVersion": 1.5,
+            "position": [
+                -432,
+                1584
+            ],
+            "id": "398cc299-0b29-47c9-82dd-f2345bd3a609",
+            "name": "Redis Chat Memory",
+            "credentials": {
+                "redis": {
+                    "id": "OX3Y4KKUxfjy4iX8",
+                    "name": "Redis account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "options": {}
+            },
+            "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+            "typeVersion": 1,
+            "position": [
+                -576,
+                1584
+            ],
+            "id": "36fb4cad-fbdd-4dd4-a1cf-5095009d7a3f",
+            "name": "Google Gemini Chat Model",
+            "credentials": {
+                "googlePalmApi": {
+                    "id": "vufQuttebhMUFCDs",
+                    "name": "Google Gemini(PaLM) Api account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "url": "=http://backend-service:8000/api/clients/phone/{{ $('Extrair Dados').first().json.phone }}",
+                "sendHeaders": true,
+                "parametersHeaders": {
+                    "values": [
+                        {}
+                    ]
+                }
+            },
+            "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+            "typeVersion": 1,
+            "position": [
+                -208,
+                1600
+            ],
+            "id": "ce59e31a-189f-49d4-8d33-ac469ef5f819",
+            "name": "verificar_cliente"
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "http://backend-service:8000/api/projects/bot/ai-create",
+                "sendHeaders": true,
+                "parametersHeaders": {
+                    "values": [
+                        {}
+                    ]
+                },
+                "sendBody": true,
+                "specifyBody": "json",
+                "jsonBody": "={\n  \"firstName\": \"{{ $fromAI('nome') }}\",\n  \"lastName\": \"{{ $fromAI('sobrenome_ou_vazio') }}\",\n  \"phone\": \"{{ $('Extrair Dados').first().json.phone }}\",\n  \"monthlyBill\": {{ $fromAI('valor_conta_luz_numerico') }},\n  \"cityState\": \"{{ $fromAI('cidade_estado') }}\",\n  \"propertyType\": \"{{ $fromAI('tipo_imovel_e_telhado') }}\"\n}"
+            },
+            "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+            "typeVersion": 1,
+            "position": [
+                -64,
+                1600
+            ],
+            "id": "f6eb0e95-2968-41bb-9d8b-68433e895c75",
+            "name": "salvar_e_calcular"
+        },
+        {
+            "parameters": {
+                "amount": 5,
+                "unit": "seconds"
+            },
+            "type": "n8n-nodes-base.wait",
+            "typeVersion": 1,
+            "position": [
+                -752,
+                1376
+            ],
+            "id": "node-wait-5s",
+            "name": "Wait 5s",
+            "webhookId": "1ad0cc33-bd9f-4402-bb0b-8d076ff7a1ab"
+        },
+        {
+            "parameters": {
+                "operation": "concatenateItems",
+                "fieldsToAggregate": {
+                    "fieldToAggregate": [
+                        {
+                            "fieldToAggregate": "message",
+                            "renameField": "message"
+                        }
+                    ]
+                },
+                "options": {
+                    "keepMissing": false
+                }
+            },
+            "type": "n8n-nodes-base.itemLists",
+            "typeVersion": 3,
+            "position": [
+                -560,
+                1376
+            ],
+            "id": "node-aggregate-messages",
+            "name": "Aggregate Messages"
+        }
+    ],
+    "pinData": {},
+    "connections": {
+        "Webhook WAHA (Entrada)": {
+            "main": [
+                [
+                    {
+                        "node": "Extrair Dados",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Extrair Dados": {
+            "main": [
+                [
+                    {
+                        "node": "Apenas Clientes",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Apenas Clientes": {
+            "main": [
+                [
+                    {
+                        "node": "Autenticar Bot (JWT)",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Autenticar Bot (JWT)": {
+            "main": [
+                [
+                    {
+                        "node": "Vendedor AI Solarize",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Vendedor AI Solarize": {
+            "main": [
+                [
+                    {
+                        "node": "WAHA: Enviar Resposta AI",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Redis Chat Memory": {
+            "ai_memory": [
+                [
+                    {
+                        "node": "Vendedor AI Solarize",
+                        "type": "ai_memory",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Google Gemini Chat Model": {
+            "ai_languageModel": [
+                [
+                    {
+                        "node": "Vendedor AI Solarize",
+                        "type": "ai_languageModel",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "verificar_cliente": {
+            "ai_tool": [
+                [
+                    {
+                        "node": "Vendedor AI Solarize",
+                        "type": "ai_tool",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "salvar_e_calcular": {
+            "ai_tool": [
+                [
+                    {
+                        "node": "Vendedor AI Solarize",
+                        "type": "ai_tool",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "active": false,
+    "settings": {
+        "executionOrder": "v1",
+        "binaryMode": "separate",
+        "availableInMCP": false
+    },
+    "versionId": "953f7223-5bde-4cdd-a7c5-c4cae74e2b24",
+    "meta": {
+        "templateCredsSetupCompleted": true,
+        "instanceId": "8dff8567851423d901f4cfa7014716a8f7c8748a55996052d32d2e3302e91d38"
+    },
+    "id": "nDvSLEfkF4WbTgGcHq66a",
+    "tags": []
+}
