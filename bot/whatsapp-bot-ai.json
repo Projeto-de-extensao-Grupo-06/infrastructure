@@ -5,6 +5,7 @@
             "parameters": {
                 "httpMethod": "POST",
                 "path": "webhook",
+                "responseMode": "onReceived",
                 "options": {}
             },
             "type": "n8n-nodes-base.webhook",
@@ -86,6 +87,210 @@
         },
         {
             "parameters": {
+                "jsCode": "const currentEpoch = new Date().getTime();\nreturn {\n  queueKey: `queue_${$input.item.json.chatId}`,\n  debounceKey: `debounce_${$input.item.json.chatId}`,\n  debounceTimestamp: currentEpoch.toString()\n};"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                -760,
+                1376
+            ],
+            "id": "code-generate-keys",
+            "name": "Gerar Chaves"
+        },
+        {
+            "parameters": {
+                "operation": "get",
+                "key": "={{ $('Gerar Chaves').first().json.queueKey }}",
+                "propertyName": "value"
+            },
+            "type": "n8n-nodes-base.redis",
+            "typeVersion": 1,
+            "position": [
+                -560,
+                1376
+            ],
+            "id": "redis-get-queue",
+            "name": "Redis: Get Queue",
+            "credentials": {
+                "redis": {
+                    "id": "OX3Y4KKUxfjy4iX8",
+                    "name": "Redis account"
+                }
+            },
+            "continueOnFail": true
+        },
+        {
+            "parameters": {
+                "jsCode": "let existing = $input.item.json.value || \"\";\nlet newMessage = $('Extrair Dados').first().json.message;\nlet newQueue = existing ? existing + \"\\n\" + newMessage : newMessage;\nreturn { newQueue: newQueue };"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                -360,
+                1376
+            ],
+            "id": "code-concat",
+            "name": "Concatenar Msg"
+        },
+        {
+            "parameters": {
+                "operation": "set",
+                "key": "={{ $('Gerar Chaves').first().json.queueKey }}",
+                "value": "={{ $json.newQueue }}",
+                "expire": true,
+                "ttl": 60
+            },
+            "type": "n8n-nodes-base.redis",
+            "typeVersion": 1,
+            "position": [
+                -160,
+                1376
+            ],
+            "id": "redis-set-queue",
+            "name": "Redis: Set Queue",
+            "credentials": {
+                "redis": {
+                    "id": "OX3Y4KKUxfjy4iX8",
+                    "name": "Redis account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "operation": "set",
+                "key": "={{ $('Gerar Chaves').first().json.debounceKey }}",
+                "value": "={{ $('Gerar Chaves').first().json.debounceTimestamp }}",
+                "expire": true,
+                "ttl": 10
+            },
+            "type": "n8n-nodes-base.redis",
+            "typeVersion": 1,
+            "position": [
+                40,
+                1376
+            ],
+            "id": "redis-set-debounce",
+            "name": "Redis: Set Debounce",
+            "credentials": {
+                "redis": {
+                    "id": "OX3Y4KKUxfjy4iX8",
+                    "name": "Redis account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "amount": 5,
+                "unit": "seconds"
+            },
+            "type": "n8n-nodes-base.wait",
+            "typeVersion": 1,
+            "position": [
+                240,
+                1376
+            ],
+            "id": "node-wait-5s",
+            "name": "Espera 5s"
+        },
+        {
+            "parameters": {
+                "operation": "get",
+                "key": "={{ $('Gerar Chaves').first().json.debounceKey }}",
+                "propertyName": "value"
+            },
+            "type": "n8n-nodes-base.redis",
+            "typeVersion": 1,
+            "position": [
+                440,
+                1376
+            ],
+            "id": "redis-get-debounce",
+            "name": "Redis: Get Debounce",
+            "credentials": {
+                "redis": {
+                    "id": "OX3Y4KKUxfjy4iX8",
+                    "name": "Redis account"
+                }
+            },
+            "continueOnFail": true
+        },
+        {
+            "parameters": {
+                "conditions": {
+                    "string": [
+                        {
+                            "value1": "={{ $json.value }}",
+                            "value2": "={{ $('Gerar Chaves').first().json.debounceTimestamp }}"
+                        }
+                    ]
+                }
+            },
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 1,
+            "position": [
+                640,
+                1376
+            ],
+            "id": "if-continue",
+            "name": "Se Timer Corresponde"
+        },
+        {
+            "parameters": {
+                "operation": "get",
+                "key": "={{ $('Gerar Chaves').first().json.queueKey }}",
+                "propertyName": "value"
+            },
+            "type": "n8n-nodes-base.redis",
+            "typeVersion": 1,
+            "position": [
+                840,
+                1376
+            ],
+            "id": "redis-get-all-msgs",
+            "name": "Redis: Pegar Fila",
+            "credentials": {
+                "redis": {
+                    "id": "OX3Y4KKUxfjy4iX8",
+                    "name": "Redis account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "operation": "delete",
+                "key": "={{ $('Gerar Chaves').first().json.queueKey }}"
+            },
+            "type": "n8n-nodes-base.redis",
+            "typeVersion": 1,
+            "position": [
+                1040,
+                1376
+            ],
+            "id": "redis-clean-msgs",
+            "name": "Redis: Limpar Fila",
+            "credentials": {
+                "redis": {
+                    "id": "OX3Y4KKUxfjy4iX8",
+                    "name": "Redis account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "jsCode": "return { json: { fullMessage: $('Redis: Pegar Fila').first().json.value || $('Extrair Dados').first().json.message } };"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                1240,
+                1376
+            ],
+            "id": "code-set-final",
+            "name": "Preparar Msg Final"
+        },
+        {
+            "parameters": {
                 "method": "POST",
                 "url": "http://backend-service:8000/api/auth/bot/login",
                 "sendHeaders": true,
@@ -102,7 +307,7 @@
             "type": "n8n-nodes-base.httpRequest",
             "typeVersion": 4.2,
             "position": [
-                -752,
+                1440,
                 1376
             ],
             "id": "5e8966f2-4052-4cd2-a9bb-3f1289fcaa00",
@@ -111,15 +316,15 @@
         {
             "parameters": {
                 "promptType": "define",
-                "text": "={{ $('Extrair Dados').item.json.message }}",
+                "text": "={{ $('Preparar Msg Final').first().json.fullMessage }}",
                 "options": {
-                    "systemMessage": "Você é o Assistente Virtual Solarize, um vendedor especialista em Energia Solar Fotovoltaica.\nSeu objetivo é qualificar leads de forma natural e amigável pelo WhatsApp, extraindo os dados necessários para que os engenheiros façam um orçamento técnico avançado.\n\nAS 4 INFORMAÇÕES QUE VOCÊ PRECISA EXTRAIR (obrigatoriamente nesta ordem se a pessoa for evasiva, mas seja conversacional):\n1. Nome completo.\n2. Valor médio da conta de luz mensal (em R$). Se der em kWh tentar pedir em R$ avisando que a estimativa foca no financeiro, mas aceitar se insistir.\n3. Cidade / Estado da instalação.\n4. Tipo de imóvel (residencial, comercial ou rural) e tipo de telhado da casa (cerâmica, fibrocimento, laje, metálico).\n\n# Ferramentas (Tools)\nUse a ferramenta apropriada quando precisar armazenar informações permanentes no sistema:\n* USE A FERRAMENTA 'verificar_cliente_existe' assim que tiver o Nome de uma pessoa que disse 'Oi', passando o telefone para ver se ele já está no nosso banco.\n* USE A FERRAMENTA 'calcular_e_criar_projeto' SOMENTE QUANDO você tiver validado com confiança as 4 informações acima com o usuário e ele disser que está tudo certo. NUNCA CHUTE DADOS. Quando você chamar essa ferramenta, ela criará o lead no CRM e te devolverá dados sobre KwP, Custo e Payback. Use esses dados retornados e crie uma bela mensagem de encerramento para o cliente informando-o e perguntando se um consultor humano pode ligar para ele.\n* USE A FERRAMENTA 'Atualizar_Status_Contato' quando o usuário disser se quer ou não falar com um humano após receber a estimativa.\n\nREGRA DE OURO: Não use formatação em negrito/itálico que dependa de HTML, use a sintaxe do WhatsApp (asterisco para *negrito*, underscore para _itálico_)."
+                    "systemMessage": "Você é o Assistente Virtual Solarize, um vendedor especialista em Energia Solar Fotovoltaica.\nSeu objetivo é qualificar leads de forma natural e amigável pelo WhatsApp, extraindo os dados necessários para que os engenheiros façam um orçamento técnico avançado.\n\nAS 4 INFORMAÇÕES QUE VOCÊ PRECISA EXTRAIR (obrigatoriamente nesta ordem se a pessoa for evasiva, mas seja conversacional):\n1. Nome completo.\n2. Valor médio da conta de luz mensal (em R$). Se der em kWh tentar pedir em R$ avisando que a estimativa foca no financeiro, mas aceitar se insistir.\n3. Cidade / Estado da instalação.\n4. Tipo de imóvel (residencial, comercial ou rural) e tipo de telhado da casa (cerâmica, fibrocimento, laje, metálico).\n\n# Ferramentas (Tools)\nUse a ferramenta apropriada quando precisar armazenar informações permanentes no sistema:\n* USE A FERRAMENTA 'verificar_cliente' assim que tiver o Nome de uma pessoa que disse 'Oi', passando o telefone para ver se ele já está no nosso banco.\n* USE A FERRAMENTA 'salvar_e_calcular' SOMENTE QUANDO você tiver validado com confiança as 4 informações acima com o usuário e ele disser que está tudo certo. NUNCA CHUTE DADOS. Quando você chamar essa ferramenta, ela criará o lead no CRM e te devolverá dados sobre KwP, Custo e Payback. Use esses dados retornados e crie uma bela mensagem de encerramento para o cliente informando-o e perguntando se um consultor humano pode ligar para ele.\n* USE A FERRAMENTA 'Atualizar_Status_Contato' quando o usuário disser se quer ou não falar com um humano após receber a estimativa.\n\nREGRA DE OURO: Não use formatação em negrito/itálico que dependa de HTML, use a sintaxe do WhatsApp (asterisco para *negrito*, underscore para _itálico_)."
                 }
             },
             "type": "@n8n/n8n-nodes-langchain.agent",
             "typeVersion": 1.7,
             "position": [
-                -528,
+                1640,
                 1376
             ],
             "id": "8c4ca012-fb1a-4d17-ae8a-8377c8a0c703",
@@ -130,14 +335,14 @@
                 "resource": "Chatting",
                 "operation": "Send Text",
                 "session": "default",
-                "chatId": "={{ $('Extrair Dados').item.json.chatId }}",
+                "chatId": "={{ $('Extrair Dados').first().json.chatId }}",
                 "text": "={{ $json.output }}",
                 "requestOptions": {}
             },
             "type": "n8n-nodes-waha.WAHA",
             "typeVersion": 202411,
             "position": [
-                -128,
+                1880,
                 1376
             ],
             "id": "caea8843-3988-42aa-a7bd-0523c8711cdb",
@@ -158,7 +363,7 @@
             "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
             "typeVersion": 1.5,
             "position": [
-                -432,
+                1760,
                 1584
             ],
             "id": "398cc299-0b29-47c9-82dd-f2345bd3a609",
@@ -177,7 +382,7 @@
             "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
             "typeVersion": 1,
             "position": [
-                -576,
+                1600,
                 1584
             ],
             "id": "36fb4cad-fbdd-4dd4-a1cf-5095009d7a3f",
@@ -202,7 +407,7 @@
             "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
             "typeVersion": 1,
             "position": [
-                -208,
+                1960,
                 1600
             ],
             "id": "ce59e31a-189f-49d4-8d33-ac469ef5f819",
@@ -225,50 +430,11 @@
             "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
             "typeVersion": 1,
             "position": [
-                -64,
+                2120,
                 1600
             ],
             "id": "f6eb0e95-2968-41bb-9d8b-68433e895c75",
             "name": "salvar_e_calcular"
-        },
-        {
-            "parameters": {
-                "amount": 5,
-                "unit": "seconds"
-            },
-            "type": "n8n-nodes-base.wait",
-            "typeVersion": 1,
-            "position": [
-                -752,
-                1376
-            ],
-            "id": "node-wait-5s",
-            "name": "Wait 5s",
-            "webhookId": "1ad0cc33-bd9f-4402-bb0b-8d076ff7a1ab"
-        },
-        {
-            "parameters": {
-                "operation": "concatenateItems",
-                "fieldsToAggregate": {
-                    "fieldToAggregate": [
-                        {
-                            "fieldToAggregate": "message",
-                            "renameField": "message"
-                        }
-                    ]
-                },
-                "options": {
-                    "keepMissing": false
-                }
-            },
-            "type": "n8n-nodes-base.itemLists",
-            "typeVersion": 3,
-            "position": [
-                -560,
-                1376
-            ],
-            "id": "node-aggregate-messages",
-            "name": "Aggregate Messages"
         }
     ],
     "pinData": {},
@@ -296,6 +462,127 @@
             ]
         },
         "Apenas Clientes": {
+            "main": [
+                [
+                    {
+                        "node": "Gerar Chaves",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Gerar Chaves": {
+            "main": [
+                [
+                    {
+                        "node": "Redis: Get Queue",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Redis: Get Queue": {
+            "main": [
+                [
+                    {
+                        "node": "Concatenar Msg",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Concatenar Msg": {
+            "main": [
+                [
+                    {
+                        "node": "Redis: Set Queue",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Redis: Set Queue": {
+            "main": [
+                [
+                    {
+                        "node": "Redis: Set Debounce",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Redis: Set Debounce": {
+            "main": [
+                [
+                    {
+                        "node": "Espera 5s",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Espera 5s": {
+            "main": [
+                [
+                    {
+                        "node": "Redis: Get Debounce",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Redis: Get Debounce": {
+            "main": [
+                [
+                    {
+                        "node": "Se Timer Corresponde",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Se Timer Corresponde": {
+            "main": [
+                [
+                    {
+                        "node": "Redis: Pegar Fila",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Redis: Pegar Fila": {
+            "main": [
+                [
+                    {
+                        "node": "Redis: Limpar Fila",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Redis: Limpar Fila": {
+            "main": [
+                [
+                    {
+                        "node": "Preparar Msg Final",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Preparar Msg Final": {
             "main": [
                 [
                     {
