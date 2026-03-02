@@ -55,6 +55,8 @@ Siga os seguintes passos para conectar os serviços no n8n:
    - Insira a sua *API Key* do Gemini correspondente.
 5. **Configurações Adicionais n8n:**
    - Caso possua nós de comunicação com o WhatsApp (Waha), certifique-se de que a URL interna `http://waha:3000` está configurada corretamente nos nós HTTP do n8n.
+   - É **essencial** seguir as instruções de configuração do WAHA e integração do n8n (via URL do webhook) demonstradas neste [tutorial em vídeo](https://youtu.be/KkKlfAb3TSI?si=aokvcl0TmcMMG_uQ).
+   - Para mais detalhes e boas práticas sobre o fluxo do n8n na nossa arquitetura, consulte este [Documento do n8n](https://bandteccom-my.sharepoint.com/:w:/g/personal/ranier_couto_sptech_school/IQCB6MnTjGKiRLRPxY3LSwGCAa5fy2sC8HN0yB7igYqK0zk?e=bmUUpz).
    
 ---
 
