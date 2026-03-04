@@ -38,7 +38,7 @@ variable "key_name" {
 }
 
 variable "frontend_ports" {
-  description = "Portas permitidas para acessar"
+  description = "Portas permitidas para acessar (SSH, HTTP(s) e Apps locais)"
   type        = list(number)
-  default     = [22, 80, 443]
+  default     = [22, 80, 443, 8000, 8080, 8081]
 }

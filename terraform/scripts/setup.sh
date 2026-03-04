@@ -16,24 +16,16 @@ echo "➡️ Iniciando atualização do sistema e instalação de pré-requisito
 sudo apt-get update
 sudo apt-get install -y ca-certificates curl gnupg lsb-release git
 
-echo "➡️ Adicionando a chave GPG oficial do Docker..."
-sudo install -m 0755 -d /etc/apt/keyrings
-sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
-sudo chmod a+r /etc/apt/keyrings/docker.asc
+echo "➡️ Instalando o Docker usando o script oficial via curl..."
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
 
-echo "➡️ Adicionando o repositório do Docker ao APT..."
-echo \
-  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
-  $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | \
-  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-
-echo "➡️ Instalando os pacotes do Docker..."
-sudo apt-get update
-sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+echo "➡️ Instalando docker-compose-plugin adicional (se faltante)..."
+sudo apt-get install -y docker-compose-plugin || true
 
 echo "➡️ Habilitando o Docker para iniciar junto com o sistema..."
-sudo systemctl enable docker
-sudo systemctl start docker
+sudo systemctl enable docker || true
+sudo systemctl start docker || true
 
 # ==============================================================================
 # Configuração de Permissões e Usuário Alvo
@@ -47,7 +39,9 @@ else
 fi
 
 echo "➡️ Adicionando o usuário '$TARGET_USER' ao grupo 'docker'..."
-sudo usermod -aG docker "$TARGET_USER"
+sudo usermod -aG docker "$TARGET_USER" || true
+
+echo "if ! groups | grep -q docker; then newgrp docker; fi" | sudo tee -a "/home/$TARGET_USER/.bashrc" > /dev/null
 
 # ==============================================================================
 # Download do Repositório (Composes) e Execução
@@ -56,7 +50,13 @@ echo "➡️ Configurando o projeto para o usuário $TARGET_USER..."
 
 # Utilizamos o 'su' para rodar os próximos comandos com o usuário e grupo corretos
 sudo su - "$TARGET_USER" -c "
+  echo 'Aguardando o daemon do Docker iniciar...'
+  while ! docker info >/dev/null 2>&1; do
+    sleep 2
+  done
+
   echo '➡️ Clonando repositório de docker-composes...'
+  cd ~
   if [ ! -d 'docker-composes' ]; then
     git clone https://github.com/Projeto-de-extensao-Grupo-06/docker-composes.git
     echo '✅ Repositório clonado com sucesso.'
