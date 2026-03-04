@@ -1,27 +1,27 @@
 # Apps Docker Compose
 
-Este docker-compose gerencia o backend (Spring Boot) e o frontend (React/Vite) do projeto.
+Este módulo orquestra a camada de aplicações do projeto, englobando o backend (Spring Boot) e os frontends (React/Vite).
 
 ## Comandos Úteis
 
-Para construir as imagens (incluindo o novo Dockerfile do frontend) e subir os containers:
+Para construir as imagens e iniciar a execução dos containers em background:
 
 ```bash
 docker-compose up -d --build
 ```
 
-Para verificar os logs de um serviço específico (ex: frontend):
+Para monitorar os logs de um serviço específico (por exemplo, o frontend):
 
 ```bash
 docker-compose logs -f frontend-service
 ```
 
-## Acessando os Serviços (Testes)
+## Acesso e Validação dos Serviços
 
-Após os containers subirem com sucesso (`docker-compose ps` para checar):
+Após a integridade de todos os containers via `docker-compose ps`:
 
-- **Frontend (Management System):** Acesse `http://localhost:8080`. Este container compila o código via Vite e usa um servidor HTTP simples (`serve` do Node.js) para servir os arquivos estáticos na porta 3000, hospedada na 8080.
-- **Frontend (Institutional Website):** Acesse `http://localhost:8081`. Similar ao management-system, usa Node para compilar via Vite e servir estaticamente na porta 3000 interna, mapeada para a 8081 externa.
-- **Backend (Spring Boot):** Acesse `http://localhost:8000` (ex: `http://localhost:8000/api/sua-rota-de-teste` ou Swagger caso ativo).
+- **Frontend (Management System):** Disponível em `http://localhost:8080`. O build é realizado via Vite e servido estaticamente pelo Node.js (`serve`) na porta interna 3000, mapeada no host para a 8080.
+- **Frontend (Institutional Website):** Disponível em `http://localhost:8081`. Operação análoga ao container anterior, compilando via Vite e utilizando a porta interna 3000, mapeada no host para a 8081.
+- **Backend (Spring Boot):** Disponível em `http://localhost:8000`.
 
-> **Atenção:** Assegure-se de que a stack `storage` (MySQL e Redis) está rodando **antes** de subir esta stack, pois o `backend-service` precisa se conectar ao banco de dados `mysql-db` na rede `storage_network`.
+**Atenção:** É estritamente obrigatório que a stack `storage` (MySQL e Redis) esteja operacional **antes** da inicialização da stack de apps. O serviço `backend-service` exige conexão efetiva com `mysql-db` na rede `storage_network` durante seu boot. O descumprimento desta regra gerará exceptions de conexão.

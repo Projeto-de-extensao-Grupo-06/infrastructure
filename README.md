@@ -1,70 +1,69 @@
-# Solarize - Configuração dos Projetos via Docker
+# Solarize - Infraestrutura e Orquestração (Docker & Terraform)
 
-Este repositório contém os arquivos orquestradores (docker-compose) divididos em duas partes principais: **Storage** (Bancos de Dados) e **Bot** (Backend, WhatsApp, e Automações com n8n).
+Bem-vindo ao repositório central de infraestrutura do projeto Solarize.
 
-Por mais que o storage seja simples, é **obrigatório** rodá-lo primeiro, pois o ambiente do bot depende da rede e do banco de dados criados nele.
-
----
-
-## 1. Subindo o Storage (Banco de Dados e Redis Principal)
-
-O ambiente de storage é essencial para fornecer o banco de dados MySQL para o backend.
-
-1. Navegue até a pasta do storage:
-   ```bash
-   cd dev/storage
-   ```
-2. Inicie os containers em segundo plano:
-   ```bash
-   docker-compose up -d
-   ```
-*(Nota: Isso criará a rede `storage_default`, necessária para a comunicação do backend com o MySQL.)*
+Este repositório consolidou todos os arquivos de orquestração (`docker-compose.yml`), automações, painéis, proxy e infraestrutura como código (IaC) divididos em partes modulares.
 
 ---
 
-## 2. Configurando e Subindo o Bot (Backend + n8n + Waha)
+## 🌳 Árvore de Diretórios
 
-Neste passo, iremos "buildar" o container do backend, subir os serviços do bot e configurar as credenciais dentro do **n8n**.
+O projeto está dividido nas seguintes camadas estruturais:
 
-1. Volte para a raiz e navegue até a pasta do bot:
-   ```bash
-   cd ../../bot
-   ```
-2. Faça o build (para o backend) e suba todos os containers:
-   ```bash
-   docker-compose up -d --build
-   ```
+```text
+docker-composes/
+├── apps/               # Aplicações proprietárias (Backend, Management System, Website)
+├── bot/                # Infraestrutura do Bot do WhatsApp (Waha, N8N, Redis)
+├── proxy/              # Proxy Reverso (Nginx) e certificados SSL (Certbot)
+├── storage/            # Bancos de Dados e Caching (MySQL, Redis)
+└── terraform/          # Infraestrutura como Código na AWS
+    ├── environments/   # Ambientes (dev, prod) e invocação dos módulos
+    ├── modules/        # Definição modular de EC2, S3, VPCs
+    └── scripts/        # Automações de instalação (setup.sh)
+```
 
-### 3. Configurações dentro do n8n
-
-Após o comando anterior, todos os serviços estarão online. O n8n estará acessível em: `http://localhost:5678`.
-
-Siga os seguintes passos para conectar os serviços no n8n:
-
-1. Acesse `http://localhost:5678` no seu navegador.
-2. **Importar os Workflows:** Importe os arquivos JSON de exemplo que estão na pasta `bot` (ex: `whatsapp-bot.json` e `whatsapp-bot-ai.json`).
-3. **Settar Conta Redis:**
-   - Vá até a área de Credentials / Conexões no n8n.
-   - Crie uma credencial para o nó do Redis.
-   - Use os dados conforme definido no docker-compose do bot:
-     - **Host:** `redis`
-     - **Port:** `6379`
-     - **Password:** `default`
-4. **Settar Chaves de API Gemini:**
-   - Da mesma forma nas Credentials, crie ou edite a credencial responsável pelo Google Gemini.
-   - Insira a sua *API Key* do Gemini correspondente.
-5. **Configurações Adicionais n8n:**
-   - Caso possua nós de comunicação com o WhatsApp (Waha), certifique-se de que a URL interna `http://waha:3000` está configurada corretamente nos nós HTTP do n8n.
-   - É **essencial** seguir as instruções de configuração do WAHA e integração do n8n (via URL do webhook) demonstradas neste [tutorial em vídeo](https://youtu.be/KkKlfAb3TSI?si=aokvcl0TmcMMG_uQ).
-   - Para mais detalhes e boas práticas sobre o fluxo do n8n na nossa arquitetura, consulte este [Documento do n8n](https://bandteccom-my.sharepoint.com/:w:/g/personal/ranier_couto_sptech_school/IQCB6MnTjGKiRLRPxY3LSwGCAa5fy2sC8HN0yB7igYqK0zk?e=bmUUpz).
-   
 ---
 
-## Resumo dos Serviços
+## 🚀 Como o Deploy é Feito Atualmente?
 
-- **MySQL:** `localhost:3307` (storage)
-- **Redis (Multidb):** `localhost:6379` (storage)
-- **Redis (Bot):** Interno para n8n `redis:6379` (bot)
-- **Backend Service:** `localhost:8000` (bot)
-- **Waha (WhatsApp Bot):** `localhost:3000` (bot)
-- **n8n (Workflows):** `localhost:5678` (bot)
+O deploy de todo esse ambiente na nuvem é 100% automatizado, seguindo a abordagem de imagens pré-compiladas (Mirror de Docker Hub) e Infraestrutura como Código.
+
+### 1. Build de Imagens 🐳
+
+Não há build do código-fonte (Spring Boot, Vite) acontecendo dentro dos servidores de produção. Os desenvolvedores realizam o *build* local (ou via pipeline de CI/CD) de cada projeto e fazem o `push` para o Docker Hub:
+
+- `seu_usuario/springboot-web-backend:latest`
+- `seu_usuario/management-system:latest`
+- `seu_usuario/institutional-website:latest`
+
+### 2. Infraestrutura na AWS ☁️
+
+O provisionamento da arquitetura na nuvem (na AWS) é executado via **Terraform** localizado na pasta `terraform/environments/dev`. Quando o comando `terraform apply` é executado, ele sobe:
+
+- VPC, Subnets, Internet Gateways.
+- Buckets S3 (Datalake).
+- A **máquina EC2** contendo a regra de permissões necessária.
+
+### 3. Automação de Startup (User Data) ⚙️
+
+Durante a inicialização da instáncia EC2 (*User Data*), a AWS injeta e executa automaticamente o script localizado em `terraform/scripts/setup.sh`. Esse script:
+
+1. Instala todos os pré-requisitos e o Docker de forma automatizada.
+2. Clona **este repositório** na pasta `/home/ubuntu/docker-composes`.
+3. Navega pelas pastas `storage`, `proxy`, `bot` e `apps`, executando um `docker compose pull` seguido de `docker compose up -d`.
+4. Todos os serviços começam a rodar, baixando as imagens publicadas do Docker Hub, instantaneamente.
+
+> Para saber mais sobre como gerenciar as chaves dos arquivos `.env` ou interagir no Docker Hub, acesse o guia de cada pasta específica!
+
+---
+
+## ⚠️ LEITURA DE MÓDULOS
+
+Para garantir o funcionamento correto e evitar erros de rede, banco de dados ou compilação de modo estendido local, **cada pasta possui o seu próprio arquivo `README.md` específico**.
+
+A subida arbitrária das stacks não é suportada e resultará em falhas de dependências se não for feita em ordem. O script automatizado da EC2 já obedece a ordem correta, que é:
+
+1. **Storage** (Cria a rede primária)
+2. **Apps / Bot / Proxy**
+
+Ciente da estrutura acima, navegue para o diretório de sua escolha e aproveite a arquitetura modular!

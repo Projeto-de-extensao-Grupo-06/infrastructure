@@ -292,7 +292,7 @@
         {
             "parameters": {
                 "method": "POST",
-                "url": "http://backend-service:8000/api/auth/bot/login",
+                "url": "={{ $env.BACKEND_API_URL }}/api/auth/bot/login",
                 "sendHeaders": true,
                 "headerParameters": {
                     "parameters": [
@@ -396,7 +396,7 @@
         },
         {
             "parameters": {
-                "url": "=http://backend-service:8000/api/clients/phone/{{ $('Extrair Dados').first().json.phone }}",
+                "url": "={{ $env.BACKEND_API_URL }}/api/clients/phone/{{ $('Extrair Dados').first().json.phone }}",
                 "sendHeaders": true,
                 "parametersHeaders": {
                     "values": [
@@ -416,7 +416,7 @@
         {
             "parameters": {
                 "method": "POST",
-                "url": "http://backend-service:8000/api/projects/bot/ai-create",
+                "url": "={{ $env.BACKEND_API_URL }}/api/projects/bot/ai-create",
                 "sendHeaders": true,
                 "parametersHeaders": {
                     "values": [

@@ -2,9 +2,7 @@ version: "3.8"
 
 services:
   backend-service:
-    build:
-      context: ../../springboot-web-backend
-      dockerfile: Dockerfile
+    image: raniersptech/springboot-web-backend:latest
     platform: linux/amd64
     extra_hosts:
       - "host.docker.internal:host-gateway"
@@ -24,18 +22,14 @@ services:
       - storage_network
 
   frontend-service:
-    build:
-      context: ../../management-system
-      dockerfile: Dockerfile
+    image: raniersptech/management-system:latest
     ports:
       - "8080:3000"
     networks:
       - apps_network
 
   institutional-website:
-    build:
-      context: ../../institutional-website
-      dockerfile: Dockerfile
+    image: raniersptech/institutional-website:latest
     ports:
       - "8081:3000"
     networks:

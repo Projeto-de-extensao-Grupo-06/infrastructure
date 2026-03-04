@@ -6,14 +6,10 @@ services:
     container_name: redis-multidb
     ports:
       - "6379:6379"
-    command: [
-      "redis-server",
-      "--databases", "3",
-      "--save", "",
-      "--appendonly", "no",
-      "--maxmemory-policy", "allkeys-lru"
-    ]
+    command: [ "redis-server", "--databases", "3", "--save", "", "--appendonly", "no", "--maxmemory-policy", "allkeys-lru" ]
     restart: unless-stopped
+    networks:
+      - storage_network
 
   mysql:
     image: mysql:8.0
@@ -24,8 +20,15 @@ services:
       MYSQL_USER: solarize
       MYSQL_PASSWORD: '06241234'
     ports:
-      - "3307:3306"   # Exposta na porta 3307
+      - "3307:3306" # Exposta na porta 3307
     volumes:
-      - ./mysql-init:/docker-entrypoint-initdb.d   # Scripts de inicialização
+      - ./mysql-init:/docker-entrypoint-initdb.d # Scripts de inicialização
     command: --default-authentication-plugin=mysql_native_password
     restart: unless-stopped
+    networks:
+      - storage_network
+
+networks:
+  storage_network:
+    name: storage_network
+    driver: bridge
