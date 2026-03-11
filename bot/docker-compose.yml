@@ -57,7 +57,6 @@ volumes:
   waha_media:
   n8n_data:
 
-
 networks:
   bot_network:
     name: bot_network

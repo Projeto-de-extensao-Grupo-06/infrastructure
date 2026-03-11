@@ -1,7 +1,7 @@
 param(
     [string]$Numero = "5511949902159",
-    [string]$Nome = "Cliente Teste",
-    [string]$Mensagem = "certinho",
+    [string]$Nome = "Ranier",
+    [string]$Mensagem = "5511949902159",
     [boolean]$Producao
 )
 

@@ -14,10 +14,10 @@ A stack utiliza:
 
 As seguintes variáveis de ambiente estão declaradas no `docker-compose.yml`:
 
-- `BACKEND_API_URL`: Mapeada para `http://host.docker.internal:8000`. Permite que o n8n alavanque o consumo de rotas REST do backend (Spring Boot), executado no contexto da stack `apps`.
-- `BOT_SECRET`: Chave criptográfica simétrica exigida para autenticação de Webhooks no backend.
+- `BACKEND_API_URL`: Mapeada para `http://host.docker.internal:8000`. Permite que o n8n se comunique com a API REST do backend (Spring Boot).
+- `BOT_SECRET`: Chave criptográfica simétrica para autenticação nos endpoints do backend.
 
-**Atenção:** A inicialização desta stack pressupõe a execução prévia e estabilidade das stacks **`storage`** e **`apps`**.
+**Atenção:** A inicialização desta stack pressupõe que a stack **`apps`** esteja ativa.
 
 ```bash
 docker-compose up -d
@@ -43,7 +43,6 @@ O setup inicial exige as seguintes configurações:
 Os fluxos importados possuem dependências de serviços cujo acesso requer autenticação explícita:
 
 1. **Conta Redis:**
-   - Crie uma credencial para a integração nativa com Redis.
    - Host: `bot-redis`
    - Port: `6379`
    - Password: `default`
@@ -52,9 +51,8 @@ Os fluxos importados possuem dependências de serviços cujo acesso requer auten
    - Adicione sua respectiva API Key do Google Gemini, essencial para operações de NLP, extração de entidades e tomada de decisão sobre acionamento de ferramentas.
 
 3. **Conta WAHA:**
-   - Configure credenciais básicas que garantam a comunicação entre os nós do WAHA e a instância local do serviço.
-
-**Nota Técnica:** A comunicação interna entre as instâncias do n8n e do WAHA neste cluster Docker ocorre invariavelmente pelo endereço `http://waha:3000`.
+   - URL Base: `http://waha:3000` (acessível via network `bot_network`)
+   - Configure credenciais básicas para comunicação entre n8n e WAHA.
 
 ### III. Provisão de Sessão no WhatsApp (WAHA)
 

@@ -1,676 +1,699 @@
 {
-    "name": "Bot Solar AI - Vendedor Virtual",
-    "nodes": [
-        {
-            "parameters": {
-                "httpMethod": "POST",
-                "path": "webhook",
-                "responseMode": "onReceived",
-                "options": {}
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "webhook",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        10832,
+        1008
+      ],
+      "id": "3b085917-3481-45e5-bed1-b15dc3644a95",
+      "name": "Webhook WAHA (Entrada)",
+      "webhookId": "ai-bot-5b83-4968-a5eb-fd391d41test"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e7225c5d-31eb-4da0-96f3-f938aeeffaa3",
+              "name": "chatId",
+              "value": "={{ $json.body.payload.from }}",
+              "type": "string"
             },
-            "type": "n8n-nodes-base.webhook",
-            "typeVersion": 2.1,
-            "position": [
-                -1408,
-                1376
-            ],
-            "id": "6d3d7c9b-5afd-450f-8365-fd64b4221dff",
-            "name": "Webhook WAHA (Entrada)",
-            "webhookId": "ai-bot-5b83-4968-a5eb-fd391d41test"
-        },
-        {
-            "parameters": {
-                "assignments": {
-                    "assignments": [
-                        {
-                            "id": "e7225c5d-31eb-4da0-96f3-f938aeeffaa3",
-                            "name": "chatId",
-                            "value": "={{ $json.body.payload.from }}",
-                            "type": "string"
-                        },
-                        {
-                            "id": "5dc1a884-ec40-42ec-adce-aa3b3f2c52fb",
-                            "name": "message",
-                            "value": "={{ $json.body.payload.body }}",
-                            "type": "string"
-                        },
-                        {
-                            "id": "60ca4a84-f25b-42fa-b7ed-b34af2a08dc3",
-                            "name": "fromMe",
-                            "value": "={{ $json.body.payload.fromMe }}",
-                            "type": "boolean"
-                        },
-                        {
-                            "id": "a63cd334-081c-4b36-bef5-e4d6a7ed3498",
-                            "name": "phone",
-                            "value": "={{ $json.body.payload.from.replace('@c.us', '').replace('@lid', '') }}",
-                            "type": "string"
-                        }
-                    ]
-                },
-                "options": {}
+            {
+              "id": "5dc1a884-ec40-42ec-adce-aa3b3f2c52fb",
+              "name": "message",
+              "value": "={{ $json.body.payload.body }}",
+              "type": "string"
             },
-            "type": "n8n-nodes-base.set",
-            "typeVersion": 3.4,
-            "position": [
-                -1184,
-                1376
-            ],
-            "id": "8f7411ef-c12d-4498-8ab5-b3f460ec672d",
-            "name": "Extrair Dados"
-        },
-        {
-            "parameters": {
-                "conditions": {
-                    "boolean": [
-                        {
-                            "value1": "={{ $json.fromMe }}"
-                        }
-                    ],
-                    "string": [
-                        {
-                            "value1": "={{ $json.chatId }}",
-                            "operation": "notEndsWith",
-                            "value2": "=@g.us"
-                        }
-                    ]
-                }
+            {
+              "id": "60ca4a84-f25b-42fa-b7ed-b34af2a08dc3",
+              "name": "fromMe",
+              "value": "={{ $json.body.payload.fromMe }}",
+              "type": "boolean"
             },
-            "type": "n8n-nodes-base.if",
-            "typeVersion": 1,
-            "position": [
-                -976,
-                1376
-            ],
-            "id": "8bade0ff-3118-465d-9c1e-964b09e28244",
-            "name": "Apenas Clientes"
-        },
-        {
-            "parameters": {
-                "jsCode": "const currentEpoch = new Date().getTime();\nreturn {\n  queueKey: `queue_${$input.item.json.chatId}`,\n  debounceKey: `debounce_${$input.item.json.chatId}`,\n  debounceTimestamp: currentEpoch.toString()\n};"
-            },
-            "type": "n8n-nodes-base.code",
-            "typeVersion": 2,
-            "position": [
-                -760,
-                1376
-            ],
-            "id": "code-generate-keys",
-            "name": "Gerar Chaves"
-        },
-        {
-            "parameters": {
-                "operation": "get",
-                "key": "={{ $('Gerar Chaves').first().json.queueKey }}",
-                "propertyName": "value"
-            },
-            "type": "n8n-nodes-base.redis",
-            "typeVersion": 1,
-            "position": [
-                -560,
-                1376
-            ],
-            "id": "redis-get-queue",
-            "name": "Redis: Get Queue",
-            "credentials": {
-                "redis": {
-                    "id": "OX3Y4KKUxfjy4iX8",
-                    "name": "Redis account"
-                }
-            },
-            "continueOnFail": true
-        },
-        {
-            "parameters": {
-                "jsCode": "let existing = $input.item.json.value || \"\";\nlet newMessage = $('Extrair Dados').first().json.message;\nlet newQueue = existing ? existing + \"\\n\" + newMessage : newMessage;\nreturn { newQueue: newQueue };"
-            },
-            "type": "n8n-nodes-base.code",
-            "typeVersion": 2,
-            "position": [
-                -360,
-                1376
-            ],
-            "id": "code-concat",
-            "name": "Concatenar Msg"
-        },
-        {
-            "parameters": {
-                "operation": "set",
-                "key": "={{ $('Gerar Chaves').first().json.queueKey }}",
-                "value": "={{ $json.newQueue }}",
-                "expire": true,
-                "ttl": 60
-            },
-            "type": "n8n-nodes-base.redis",
-            "typeVersion": 1,
-            "position": [
-                -160,
-                1376
-            ],
-            "id": "redis-set-queue",
-            "name": "Redis: Set Queue",
-            "credentials": {
-                "redis": {
-                    "id": "OX3Y4KKUxfjy4iX8",
-                    "name": "Redis account"
-                }
+            {
+              "id": "a63cd334-081c-4b36-bef5-e4d6a7ed3498",
+              "name": "phone",
+              "value": "={{ $json.body.payload.from.replace('@c.us', '').replace('@lid', '') }}",
+              "type": "string"
             }
+          ]
         },
-        {
-            "parameters": {
-                "operation": "set",
-                "key": "={{ $('Gerar Chaves').first().json.debounceKey }}",
-                "value": "={{ $('Gerar Chaves').first().json.debounceTimestamp }}",
-                "expire": true,
-                "ttl": 10
-            },
-            "type": "n8n-nodes-base.redis",
-            "typeVersion": 1,
-            "position": [
-                40,
-                1376
-            ],
-            "id": "redis-set-debounce",
-            "name": "Redis: Set Debounce",
-            "credentials": {
-                "redis": {
-                    "id": "OX3Y4KKUxfjy4iX8",
-                    "name": "Redis account"
-                }
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        11056,
+        1008
+      ],
+      "id": "2fce598b-e436-4cbc-bb4d-fbe1d646d1af",
+      "name": "Extrair Dados"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.fromMe }}"
             }
-        },
-        {
-            "parameters": {
-                "amount": 5,
-                "unit": "seconds"
-            },
-            "type": "n8n-nodes-base.wait",
-            "typeVersion": 1,
-            "position": [
-                240,
-                1376
-            ],
-            "id": "node-wait-5s",
-            "name": "Espera 5s"
-        },
-        {
-            "parameters": {
-                "operation": "get",
-                "key": "={{ $('Gerar Chaves').first().json.debounceKey }}",
-                "propertyName": "value"
-            },
-            "type": "n8n-nodes-base.redis",
-            "typeVersion": 1,
-            "position": [
-                440,
-                1376
-            ],
-            "id": "redis-get-debounce",
-            "name": "Redis: Get Debounce",
-            "credentials": {
-                "redis": {
-                    "id": "OX3Y4KKUxfjy4iX8",
-                    "name": "Redis account"
-                }
-            },
-            "continueOnFail": true
-        },
-        {
-            "parameters": {
-                "conditions": {
-                    "string": [
-                        {
-                            "value1": "={{ $json.value }}",
-                            "value2": "={{ $('Gerar Chaves').first().json.debounceTimestamp }}"
-                        }
-                    ]
-                }
-            },
-            "type": "n8n-nodes-base.if",
-            "typeVersion": 1,
-            "position": [
-                640,
-                1376
-            ],
-            "id": "if-continue",
-            "name": "Se Timer Corresponde"
-        },
-        {
-            "parameters": {
-                "operation": "get",
-                "key": "={{ $('Gerar Chaves').first().json.queueKey }}",
-                "propertyName": "value"
-            },
-            "type": "n8n-nodes-base.redis",
-            "typeVersion": 1,
-            "position": [
-                840,
-                1376
-            ],
-            "id": "redis-get-all-msgs",
-            "name": "Redis: Pegar Fila",
-            "credentials": {
-                "redis": {
-                    "id": "OX3Y4KKUxfjy4iX8",
-                    "name": "Redis account"
-                }
+          ],
+          "string": [
+            {
+              "value1": "={{ $json.chatId }}",
+              "operation": "notEndsWith",
+              "value2": "=@g.us"
             }
-        },
-        {
-            "parameters": {
-                "operation": "delete",
-                "key": "={{ $('Gerar Chaves').first().json.queueKey }}"
-            },
-            "type": "n8n-nodes-base.redis",
-            "typeVersion": 1,
-            "position": [
-                1040,
-                1376
-            ],
-            "id": "redis-clean-msgs",
-            "name": "Redis: Limpar Fila",
-            "credentials": {
-                "redis": {
-                    "id": "OX3Y4KKUxfjy4iX8",
-                    "name": "Redis account"
-                }
-            }
-        },
-        {
-            "parameters": {
-                "jsCode": "return { json: { fullMessage: $('Redis: Pegar Fila').first().json.value || $('Extrair Dados').first().json.message } };"
-            },
-            "type": "n8n-nodes-base.code",
-            "typeVersion": 2,
-            "position": [
-                1240,
-                1376
-            ],
-            "id": "code-set-final",
-            "name": "Preparar Msg Final"
-        },
-        {
-            "parameters": {
-                "method": "POST",
-                "url": "={{ $env.BACKEND_API_URL }}/api/auth/bot/login",
-                "sendHeaders": true,
-                "headerParameters": {
-                    "parameters": [
-                        {
-                            "name": "x-bot-secret",
-                            "value": "={{ $env.BOT_SECRET }}"
-                        }
-                    ]
-                },
-                "options": {}
-            },
-            "type": "n8n-nodes-base.httpRequest",
-            "typeVersion": 4.2,
-            "position": [
-                1440,
-                1376
-            ],
-            "id": "5e8966f2-4052-4cd2-a9bb-3f1289fcaa00",
-            "name": "Autenticar Bot (JWT)"
-        },
-        {
-            "parameters": {
-                "promptType": "define",
-                "text": "={{ $('Preparar Msg Final').first().json.fullMessage }}",
-                "options": {
-                    "systemMessage": "Você é o Assistente Virtual Solarize, um vendedor especialista em Energia Solar Fotovoltaica.\nSeu objetivo é qualificar leads de forma natural e amigável pelo WhatsApp, extraindo os dados necessários para que os engenheiros façam um orçamento técnico avançado.\n\nAS 4 INFORMAÇÕES QUE VOCÊ PRECISA EXTRAIR (obrigatoriamente nesta ordem se a pessoa for evasiva, mas seja conversacional):\n1. Nome completo.\n2. Valor médio da conta de luz mensal (em R$). Se der em kWh tentar pedir em R$ avisando que a estimativa foca no financeiro, mas aceitar se insistir.\n3. Cidade / Estado da instalação.\n4. Tipo de imóvel (residencial, comercial ou rural) e tipo de telhado da casa (cerâmica, fibrocimento, laje, metálico).\n\n# Ferramentas (Tools)\nUse a ferramenta apropriada quando precisar armazenar informações permanentes no sistema:\n* USE A FERRAMENTA 'verificar_cliente' assim que tiver o Nome de uma pessoa que disse 'Oi', passando o telefone para ver se ele já está no nosso banco.\n* USE A FERRAMENTA 'salvar_e_calcular' SOMENTE QUANDO você tiver validado com confiança as 4 informações acima com o usuário e ele disser que está tudo certo. NUNCA CHUTE DADOS. Quando você chamar essa ferramenta, ela criará o lead no CRM e te devolverá dados sobre KwP, Custo e Payback. Use esses dados retornados e crie uma bela mensagem de encerramento para o cliente informando-o e perguntando se um consultor humano pode ligar para ele.\n* USE A FERRAMENTA 'Atualizar_Status_Contato' quando o usuário disser se quer ou não falar com um humano após receber a estimativa.\n\nREGRA DE OURO: Não use formatação em negrito/itálico que dependa de HTML, use a sintaxe do WhatsApp (asterisco para *negrito*, underscore para _itálico_)."
-                }
-            },
-            "type": "@n8n/n8n-nodes-langchain.agent",
-            "typeVersion": 1.7,
-            "position": [
-                1640,
-                1376
-            ],
-            "id": "8c4ca012-fb1a-4d17-ae8a-8377c8a0c703",
-            "name": "Vendedor AI Solarize"
-        },
-        {
-            "parameters": {
-                "resource": "Chatting",
-                "operation": "Send Text",
-                "session": "default",
-                "chatId": "={{ $('Extrair Dados').first().json.chatId }}",
-                "text": "={{ $json.output }}",
-                "requestOptions": {}
-            },
-            "type": "n8n-nodes-waha.WAHA",
-            "typeVersion": 202411,
-            "position": [
-                1880,
-                1376
-            ],
-            "id": "caea8843-3988-42aa-a7bd-0523c8711cdb",
-            "name": "WAHA: Enviar Resposta AI",
-            "credentials": {
-                "wahaApi": {
-                    "id": "9j7lU2CkkdwjGcVk",
-                    "name": "WAHA account"
-                }
-            }
-        },
-        {
-            "parameters": {
-                "sessionIdType": "customKey",
-                "sessionKey": "={{ $('Extrair Dados').first().json.chatId }}",
-                "sessionTtl": 1440
-            },
-            "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
-            "typeVersion": 1.5,
-            "position": [
-                1760,
-                1584
-            ],
-            "id": "398cc299-0b29-47c9-82dd-f2345bd3a609",
-            "name": "Redis Chat Memory",
-            "credentials": {
-                "redis": {
-                    "id": "OX3Y4KKUxfjy4iX8",
-                    "name": "Redis account"
-                }
-            }
-        },
-        {
-            "parameters": {
-                "options": {}
-            },
-            "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
-            "typeVersion": 1,
-            "position": [
-                1600,
-                1584
-            ],
-            "id": "36fb4cad-fbdd-4dd4-a1cf-5095009d7a3f",
-            "name": "Google Gemini Chat Model",
-            "credentials": {
-                "googlePalmApi": {
-                    "id": "vufQuttebhMUFCDs",
-                    "name": "Google Gemini(PaLM) Api account"
-                }
-            }
-        },
-        {
-            "parameters": {
-                "url": "={{ $env.BACKEND_API_URL }}/api/clients/phone/{{ $('Extrair Dados').first().json.phone }}",
-                "sendHeaders": true,
-                "parametersHeaders": {
-                    "values": [
-                        {}
-                    ]
-                }
-            },
-            "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
-            "typeVersion": 1,
-            "position": [
-                1960,
-                1600
-            ],
-            "id": "ce59e31a-189f-49d4-8d33-ac469ef5f819",
-            "name": "verificar_cliente"
-        },
-        {
-            "parameters": {
-                "method": "POST",
-                "url": "={{ $env.BACKEND_API_URL }}/api/projects/bot/ai-create",
-                "sendHeaders": true,
-                "parametersHeaders": {
-                    "values": [
-                        {}
-                    ]
-                },
-                "sendBody": true,
-                "specifyBody": "json",
-                "jsonBody": "={\n  \"firstName\": \"{{ $fromAI('nome') }}\",\n  \"lastName\": \"{{ $fromAI('sobrenome_ou_vazio') }}\",\n  \"phone\": \"{{ $('Extrair Dados').first().json.phone }}\",\n  \"monthlyBill\": {{ $fromAI('valor_conta_luz_numerico') }},\n  \"cityState\": \"{{ $fromAI('cidade_estado') }}\",\n  \"propertyType\": \"{{ $fromAI('tipo_imovel_e_telhado') }}\"\n}"
-            },
-            "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
-            "typeVersion": 1,
-            "position": [
-                2120,
-                1600
-            ],
-            "id": "f6eb0e95-2968-41bb-9d8b-68433e895c75",
-            "name": "salvar_e_calcular"
+          ]
         }
-    ],
-    "pinData": {},
-    "connections": {
-        "Webhook WAHA (Entrada)": {
-            "main": [
-                [
-                    {
-                        "node": "Extrair Dados",
-                        "type": "main",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "Extrair Dados": {
-            "main": [
-                [
-                    {
-                        "node": "Apenas Clientes",
-                        "type": "main",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "Apenas Clientes": {
-            "main": [
-                [
-                    {
-                        "node": "Gerar Chaves",
-                        "type": "main",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "Gerar Chaves": {
-            "main": [
-                [
-                    {
-                        "node": "Redis: Get Queue",
-                        "type": "main",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "Redis: Get Queue": {
-            "main": [
-                [
-                    {
-                        "node": "Concatenar Msg",
-                        "type": "main",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "Concatenar Msg": {
-            "main": [
-                [
-                    {
-                        "node": "Redis: Set Queue",
-                        "type": "main",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "Redis: Set Queue": {
-            "main": [
-                [
-                    {
-                        "node": "Redis: Set Debounce",
-                        "type": "main",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "Redis: Set Debounce": {
-            "main": [
-                [
-                    {
-                        "node": "Espera 5s",
-                        "type": "main",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "Espera 5s": {
-            "main": [
-                [
-                    {
-                        "node": "Redis: Get Debounce",
-                        "type": "main",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "Redis: Get Debounce": {
-            "main": [
-                [
-                    {
-                        "node": "Se Timer Corresponde",
-                        "type": "main",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "Se Timer Corresponde": {
-            "main": [
-                [
-                    {
-                        "node": "Redis: Pegar Fila",
-                        "type": "main",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "Redis: Pegar Fila": {
-            "main": [
-                [
-                    {
-                        "node": "Redis: Limpar Fila",
-                        "type": "main",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "Redis: Limpar Fila": {
-            "main": [
-                [
-                    {
-                        "node": "Preparar Msg Final",
-                        "type": "main",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "Preparar Msg Final": {
-            "main": [
-                [
-                    {
-                        "node": "Autenticar Bot (JWT)",
-                        "type": "main",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "Autenticar Bot (JWT)": {
-            "main": [
-                [
-                    {
-                        "node": "Vendedor AI Solarize",
-                        "type": "main",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "Vendedor AI Solarize": {
-            "main": [
-                [
-                    {
-                        "node": "WAHA: Enviar Resposta AI",
-                        "type": "main",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "Redis Chat Memory": {
-            "ai_memory": [
-                [
-                    {
-                        "node": "Vendedor AI Solarize",
-                        "type": "ai_memory",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "Google Gemini Chat Model": {
-            "ai_languageModel": [
-                [
-                    {
-                        "node": "Vendedor AI Solarize",
-                        "type": "ai_languageModel",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "verificar_cliente": {
-            "ai_tool": [
-                [
-                    {
-                        "node": "Vendedor AI Solarize",
-                        "type": "ai_tool",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "salvar_e_calcular": {
-            "ai_tool": [
-                [
-                    {
-                        "node": "Vendedor AI Solarize",
-                        "type": "ai_tool",
-                        "index": 0
-                    }
-                ]
-            ]
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        11264,
+        1008
+      ],
+      "id": "bb104837-992c-4f39-9443-fdee57f554a4",
+      "name": "Apenas Clientes"
+    },
+    {
+      "parameters": {
+        "jsCode": "const currentEpoch = new Date().getTime();\nreturn {\n  queueKey: `queue_${$input.item.json.chatId}`,\n  debounceKey: `debounce_${$input.item.json.chatId}`,\n  debounceTimestamp: currentEpoch.toString()\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        11488,
+        1008
+      ],
+      "id": "1a184b5c-68bb-4675-a23c-7140c27d4d6f",
+      "name": "Gerar Chaves"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "value",
+        "key": "={{ $('Gerar Chaves').first().json.queueKey }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        11680,
+        1008
+      ],
+      "id": "07b28098-68ed-497d-b0a7-c5e7bf12b747",
+      "name": "Redis: Get Queue",
+      "credentials": {
+        "redis": {
+          "id": "OX3Y4KKUxfjy4iX8",
+          "name": "Redis account"
         }
+      },
+      "continueOnFail": true
     },
-    "active": false,
-    "settings": {
-        "executionOrder": "v1",
-        "binaryMode": "separate",
-        "availableInMCP": false
+    {
+      "parameters": {
+        "jsCode": "let existing = $input.item.json.value || \"\";\nlet newMessage = $('Extrair Dados').first().json.message;\nlet newQueue = existing ? existing + \"\\n\" + newMessage : newMessage;\nreturn { newQueue: newQueue };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        11888,
+        1008
+      ],
+      "id": "2a0d2e68-ea7b-4124-85d5-e3926089ce27",
+      "name": "Concatenar Msg"
     },
-    "versionId": "953f7223-5bde-4cdd-a7c5-c4cae74e2b24",
-    "meta": {
-        "templateCredsSetupCompleted": true,
-        "instanceId": "8dff8567851423d901f4cfa7014716a8f7c8748a55996052d32d2e3302e91d38"
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "={{ $('Gerar Chaves').first().json.queueKey }}",
+        "value": "={{ $json.newQueue }}",
+        "expire": true
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        12080,
+        1008
+      ],
+      "id": "452ee840-fbbc-44c6-8982-023ca3ad6fe8",
+      "name": "Redis: Set Queue",
+      "credentials": {
+        "redis": {
+          "id": "OX3Y4KKUxfjy4iX8",
+          "name": "Redis account"
+        }
+      }
     },
-    "id": "nDvSLEfkF4WbTgGcHq66a",
-    "tags": []
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "={{ $('Gerar Chaves').first().json.debounceKey }}",
+        "value": "={{ $('Gerar Chaves').first().json.debounceTimestamp }}",
+        "expire": true,
+        "ttl": 10
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        12288,
+        1008
+      ],
+      "id": "d84d8a2c-6231-4b3f-a7b7-6734820d2bb9",
+      "name": "Redis: Set Debounce",
+      "credentials": {
+        "redis": {
+          "id": "OX3Y4KKUxfjy4iX8",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 5,
+        "unit": "seconds"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [
+        12480,
+        1008
+      ],
+      "id": "bda6d262-4cfb-49c3-a07b-592f08895af9",
+      "name": "Espera 5s",
+      "webhookId": "6c8200ba-c0f3-46ea-ad2a-5e4f1c682956"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "value",
+        "key": "={{ $('Gerar Chaves').first().json.debounceKey }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        12688,
+        1008
+      ],
+      "id": "73d7ddf1-57b1-41f4-84cf-d9e943229c9a",
+      "name": "Redis: Get Debounce",
+      "credentials": {
+        "redis": {
+          "id": "OX3Y4KKUxfjy4iX8",
+          "name": "Redis account"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.value }}",
+              "value2": "={{ $('Gerar Chaves').first().json.debounceTimestamp }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        12880,
+        1008
+      ],
+      "id": "48d428dd-9852-4327-b861-2a6c7826ac36",
+      "name": "Se Timer Corresponde"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "value",
+        "key": "={{ $('Gerar Chaves').first().json.queueKey }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        13088,
+        1008
+      ],
+      "id": "7f23082e-4f84-45ad-8b8d-604d2ee4c7e3",
+      "name": "Redis: Pegar Fila",
+      "credentials": {
+        "redis": {
+          "id": "OX3Y4KKUxfjy4iX8",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "={{ $('Gerar Chaves').first().json.queueKey }}"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        13280,
+        1008
+      ],
+      "id": "b106ee56-00d5-4a96-ae03-837b3f5f2385",
+      "name": "Redis: Limpar Fila",
+      "credentials": {
+        "redis": {
+          "id": "OX3Y4KKUxfjy4iX8",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return { json: { fullMessage: $('Redis: Pegar Fila').first().json.value || $('Extrair Dados').first().json.message } };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        13488,
+        1008
+      ],
+      "id": "31b05c6a-59b9-4939-b5e7-eddf0ceb94df",
+      "name": "Preparar Msg Final"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://host.docker.internal:8000/api/auth/bot/login",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-bot-secret",
+              "value": "solarize_whatsapp_bot_super_secret"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        13680,
+        1008
+      ],
+      "id": "974a5066-6e59-4787-98dd-bc898de77c95",
+      "name": "Autenticar Bot (JWT)"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Preparar Msg Final').first().json.fullMessage }}",
+        "options": {
+          "systemMessage": "Você é o Assistente Virtual SolarWay, um vendedor especialista em Energia Solar Fotovoltaica.\nSeu objetivo é qualificar leads de forma natural e amigável pelo WhatsApp, extraindo os dados necessários para que os engenheiros façam um orçamento técnico avançado.\n\nAS 5 INFORMAÇÕES QUE VOCÊ PRECISA EXTRAIR (obrigatoriamente, mas seja conversacional):\n1. *Nome completo* do cliente\n2. *Valor médio da conta de luz mensal* (em R$). Se der em kWh tentar pedir em R$ avisando que a estimativa foca no financeiro, mas aceitar se insistir.\n3. *CEP ou endereço* (rua, número, bairro) da instalação. SEMPRE peça o CEP!\n4. *Cidade e Estado* da instalação\n5. *Tipo de imóvel* (residencial, comercial ou rural) e *tipo de telhado* (cerâmica, fibrocimento, laje, metálico)\n\n# Ferramentas (Tools) e Como Usar\n\n## Ferramenta 'buscar_endereco_cep'\nUSE quando o cliente informar um CEP válido (formato: 12345-678 ou 12345678)\n- Parâmetro: cep (ex: '01310-100')\n- Retorna: logradouro, bairro, localidade, uf\n- EXEMPLO: {\"cep\": \"01310-100\"}\n\n## Ferramenta 'salvar_e_calcular'\nUSE SOMENTE quando tiver TODAS as 5 informações validadas com o usuário\nParâmetros OBRIGATÓRIOS:\n- nome: Nome completo (ex: 'João Silva Santos')\n- phone: Telefone do cliente em formato internacional (ex: '5511987654321')\n- monthlyBill: Valor da conta em reais, SOMENTE número (ex: '850.50')\n- cep: CEP com hífen (ex: '01310-100')\n- rua: Nome da rua (ex: 'Avenida Paulista')\n- numero: Número da casa/apto (ex: '1500')\n- bairro: Nome do bairro (ex: 'Bela Vista')\n- cidade: Nome da cidade (ex: 'São Paulo')\n- estado: Sigla, sempre 2 letras (ex: 'SP')\n- tipo_imovel: Tipo em minúsculas (ex: 'residencial', 'comercial')\n- tipo_telhado: Tipo de cobertura (ex: 'cerâmica')\n- apartamento: Número do apto ou vazio (ex: '1402' ou '')\n\nREGRAS DE OURO:\n* NUNCA use a ferramenta sem validar TODAS as 5 informações com confirmação do cliente\n* NUNCA chute ou presuma dados\n* Ao chamar 'buscar_endereco_cep', aguarde o retorno e use os dados (logradouro, bairro, localidade, uf)\n* Quando 'salvar_e_calcular' retornar dados de KwP/Custo/Payback, crie mensagem amigável informando e perguntando se quer falar com consultor\n* Use sintaxe WhatsApp: *negrito* com asteriscos, _itálico_ com underscores, sem HTML"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        13888,
+        1008
+      ],
+      "id": "0a100d97-8e89-4866-8634-5353099a04e7",
+      "name": "Vendedor AI Solarize"
+    },
+    {
+      "parameters": {
+        "resource": "Chatting",
+        "operation": "Send Text",
+        "session": "default",
+        "chatId": "={{ $('Extrair Dados').first().json.chatId }}",
+        "text": "={{ $json.output }}",
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-waha.WAHA",
+      "typeVersion": 202411,
+      "position": [
+        14208,
+        1008
+      ],
+      "id": "0e550021-1354-457d-9a4b-c07374b9e04f",
+      "name": "WAHA: Enviar Resposta AI",
+      "credentials": {
+        "wahaApi": {
+          "id": "9j7lU2CkkdwjGcVk",
+          "name": "WAHA account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Extrair Dados').first().json.chatId }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
+      "typeVersion": 1.5,
+      "position": [
+        14000,
+        1216
+      ],
+      "id": "2c8f8552-31ba-4d00-b573-1d46ccc63ee2",
+      "name": "Redis Chat Memory",
+      "credentials": {
+        "redis": {
+          "id": "OX3Y4KKUxfjy4iX8",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        13840,
+        1216
+      ],
+      "id": "a2719b44-6e3e-40e1-a2e4-ec9d2485437e",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "vufQuttebhMUFCDs",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=http://host.docker.internal:8000/api/clients/phone/{{ $fromAI('phone') }}",
+        "sendHeaders": true,
+        "parametersHeaders": {
+          "values": [
+            {
+              "name": "Authorization",
+              "valueProvider": "fieldValue",
+              "value": "={{ $json.token }}"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1,
+      "position": [
+        14176,
+        1264
+      ],
+      "id": "76297dd4-400f-420d-8984-4364cf1b1f1a",
+      "name": "verificar_cliente"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://host.docker.internal:8000/api/projects/bot",
+        "sendHeaders": true,
+        "parametersHeaders": {
+          "values": [
+            {
+              "name": "Authorization",
+              "valueProvider": "fieldValue",
+              "value": "=Bearer {{ $('Autenticar Bot (JWT)').first().json.token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"firstName\": \"{{ ($fromAI('nome') || '').split(' ')[0] }}\",\n  \"lastName\": \"{{ ($fromAI('nome') || '').split(' ').slice(1).join(' ') }}\",\n  \"phone\": \"{{ $fromAI('phone') || $('Extrair Dados').first().json.phone }}\",\n  \"monthlyBill\": \"{{ $fromAI('monthlyBill') || '0' }}\",\n  \"cityState\": \"{{ $fromAI('cidade') }}, {{ $fromAI('estado') }}\",\n  \"propertyType\": \"{{ $fromAI('tipo_imovel') }} - {{ $fromAI('tipo_telhado') }}\",\n  \"address\": {\n    \"postalCode\": \"{{ ($fromAI('cep') || '00000000').replace('-', '') }}\",\n    \"streetName\": \"{{ $fromAI('rua') || 'Avenida' }}\",\n    \"number\": \"{{ $fromAI('numero') || 'S/N' }}\",\n    \"neighborhood\": \"{{ $fromAI('bairro') || 'Centro' }}\",\n    \"city\": \"{{ $fromAI('cidade') }}\",\n    \"state\": \"{{ $fromAI('estado') }}\",\n    \"type\": \"RESIDENTIAL\",\n    \"apartment\": \"{{ $fromAI('apartamento') || '' }}\"\n  }\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1,
+      "position": [
+        14304,
+        1264
+      ],
+      "id": "c613faa9-0c5f-4cc7-baa1-a1bad83fedd3",
+      "name": "salvar_e_calcular"
+    },
+    {
+      "parameters": {
+        "url": "https://viacep.com.br/ws/{{ $fromAI('query').replace('-', '') }}/json/",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1,
+      "position": [
+        14432,
+        1264
+      ],
+      "id": "a7b8c9d0-e1f2-4a3b-5c6d-7e8f9a0b1c2d",
+      "name": "buscar_endereco_cep"
+    }
+  ],
+  "connections": {
+    "Webhook WAHA (Entrada)": {
+      "main": [
+        [
+          {
+            "node": "Extrair Dados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extrair Dados": {
+      "main": [
+        [
+          {
+            "node": "Apenas Clientes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apenas Clientes": {
+      "main": [
+        [
+          {
+            "node": "Gerar Chaves",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gerar Chaves": {
+      "main": [
+        [
+          {
+            "node": "Redis: Get Queue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis: Get Queue": {
+      "main": [
+        [
+          {
+            "node": "Concatenar Msg",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Concatenar Msg": {
+      "main": [
+        [
+          {
+            "node": "Redis: Set Queue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis: Set Queue": {
+      "main": [
+        [
+          {
+            "node": "Redis: Set Debounce",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis: Set Debounce": {
+      "main": [
+        [
+          {
+            "node": "Espera 5s",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Espera 5s": {
+      "main": [
+        [
+          {
+            "node": "Redis: Get Debounce",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis: Get Debounce": {
+      "main": [
+        [
+          {
+            "node": "Se Timer Corresponde",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Se Timer Corresponde": {
+      "main": [
+        [
+          {
+            "node": "Redis: Pegar Fila",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis: Pegar Fila": {
+      "main": [
+        [
+          {
+            "node": "Redis: Limpar Fila",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis: Limpar Fila": {
+      "main": [
+        [
+          {
+            "node": "Preparar Msg Final",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar Msg Final": {
+      "main": [
+        [
+          {
+            "node": "Autenticar Bot (JWT)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Autenticar Bot (JWT)": {
+      "main": [
+        [
+          {
+            "node": "Vendedor AI Solarize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Vendedor AI Solarize": {
+      "main": [
+        [
+          {
+            "node": "WAHA: Enviar Resposta AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Vendedor AI Solarize",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Vendedor AI Solarize",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "verificar_cliente": {
+      "ai_tool": [
+        [
+          {
+            "node": "Vendedor AI Solarize",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "salvar_e_calcular": {
+      "ai_tool": [
+        [
+          {
+            "node": "Vendedor AI Solarize",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "buscar_endereco_cep": {
+      "ai_tool": [
+        [
+          {
+            "node": "Vendedor AI Solarize",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "8dff8567851423d901f4cfa7014716a8f7c8748a55996052d32d2e3302e91d38"
+  }
 }
