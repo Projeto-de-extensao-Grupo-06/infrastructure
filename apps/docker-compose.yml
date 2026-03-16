@@ -3,7 +3,6 @@ version: "3.8"
 services:
   backend-service:
     image: raniersptech/springboot-web-backend:latest
-    restart: on-failure
     platform: linux/amd64
     extra_hosts:
       - "host.docker.internal:host-gateway"
