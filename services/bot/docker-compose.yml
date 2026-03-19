@@ -10,7 +10,7 @@ services:
       REDIS_USER: default
       REDIS_PASSWORD: default
     ports:
-      - "6380:6379"
+      - "${PORT_BOT_REDIS:-6380}:6379"
     networks:
       - solarize_network
 
@@ -29,7 +29,7 @@ services:
       - waha_sessions:/app/.sessions
       - waha_media:/app/.media
     ports:
-      - "3000:3000"
+      - "${PORT_WAHA:-3000}:3000"
     networks:
       - solarize_network
 
@@ -50,7 +50,7 @@ services:
     volumes:
       - n8n_data:/home/node/.n8n
     ports:
-      - "5678:5678"
+      - "${PORT_N8N:-5678}:5678"
     networks:
       - solarize_network
 

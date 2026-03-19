@@ -22,7 +22,7 @@ services:
       AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY}"
       AWS_SESSION_TOKEN: "${AWS_SESSION_TOKEN}"
     ports:
-      - "8000:8000"
+      - "${PORT_BACKEND_MONOLITH:-8000}:8000"
     restart: on-failure
     networks:
       - solarize_network

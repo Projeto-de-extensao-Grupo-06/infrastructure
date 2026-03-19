@@ -5,7 +5,7 @@ services:
     image: redis:7.4
     container_name: redis-multidb
     ports:
-      - "6379:6379"
+      - "${PORT_REDIS:-6379}:6379"
     command: [ "redis-server", "--databases", "3", "--save", "", "--appendonly", "no", "--maxmemory-policy", "allkeys-lru" ]
     restart: unless-stopped
     networks:
@@ -21,7 +21,7 @@ services:
       MYSQL_USER: ${DB_USERNAME}
       MYSQL_PASSWORD: ${DB_PASSWORD}
     ports:
-      - "3307:3306" # Exposta na porta 3307
+      - "${PORT_MYSQL:-3307}:3306" # Exposta na porta configurada (padrão 3307)
     volumes:
       - ./mysql-init:/docker-entrypoint-initdb.d # Scripts de inicialização
     restart: unless-stopped

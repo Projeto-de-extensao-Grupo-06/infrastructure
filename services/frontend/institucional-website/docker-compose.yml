@@ -5,7 +5,7 @@ services:
     image: raniersptech/institutional-website:latest
     container_name: institutional-website
     ports:
-      - "8081:3000"
+      - "${PORT_INSTITUTIONAL_WEBSITE:-8081}:3000"
     networks:
       - solarize_network
 

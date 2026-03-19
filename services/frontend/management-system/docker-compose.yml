@@ -5,7 +5,7 @@ services:
     image: raniersptech/management-system:latest
     container_name: management-system
     ports:
-      - "8080:3000"
+      - "${PORT_MANAGEMENT_SYSTEM:-8080}:3000"
     networks:
       - solarize_network
 
