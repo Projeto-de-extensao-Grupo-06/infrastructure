@@ -1,3 +1,6 @@
+SET NAMES utf8mb4;
+ALTER DATABASE solarize CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
 -- Configurações Globais e Permissões
 CREATE USER IF NOT EXISTS 'solarize'@'%' IDENTIFIED BY '06241234';
 GRANT ALL PRIVILEGES ON *.* TO 'solarize'@'%' WITH GRANT OPTION;
@@ -130,6 +133,38 @@ CREATE TABLE IF NOT EXISTS portfolio (
     CONSTRAINT fk_portfolio_project FOREIGN KEY (fk_project) REFERENCES project(id_project)
 ) ENGINE=InnoDB;
 
+CREATE TABLE IF NOT EXISTS retry_queue (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    scheduled_date DATETIME(6),
+    retrying BIT(1),
+    fk_project BIGINT,
+    CONSTRAINT fk_retry_project FOREIGN KEY (fk_project) REFERENCES project(id_project)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS budget (
+    id_budget BIGINT AUTO_INCREMENT PRIMARY KEY,
+    subtotal DECIMAL(19,2),
+    total_cost DECIMAL(19,2),
+    discount DECIMAL(19,2),
+    material_cost DECIMAL(19,2),
+    service_cost DECIMAL(19,2),
+    created_at DATETIME(6),
+    discount_type VARCHAR(255),
+    final_budget BIT(1),
+    fk_project BIGINT,
+    CONSTRAINT fk_budget_project FOREIGN KEY (fk_project) REFERENCES project(id_project)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS budget_material (
+    fk_budget BIGINT,
+    fk_material_url BIGINT,
+    quantity INT,
+    price DECIMAL(19,2),
+    PRIMARY KEY (fk_budget, fk_material_url),
+    CONSTRAINT fk_bm_budget FOREIGN KEY (fk_budget) REFERENCES budget(id_budget),
+    CONSTRAINT fk_bm_material_url FOREIGN KEY (fk_material_url) REFERENCES material_url(id_material_url)
+) ENGINE=InnoDB;
+
 -- 3. Carga de Dados (Inserts)
 -- Usamos INSERT IGNORE para evitar erros se rodar mais de uma vez.
 
@@ -194,6 +229,16 @@ INSERT IGNORE INTO schedule (id_schedule, title, description, start_date, end_da
 INSERT IGNORE INTO portfolio (id_portfolio, title, description, image_path, fk_project) VALUES
 (1, 'Residência Sustentável', 'Sistema 5kWp em telhado cerâmico', '/images/portfolio/joao_v1.jpg', 1),
 (2, 'Backup Hospitalar', 'Sistema de segurança energética', '/images/portfolio/maria_clinic.jpg', 2);
+
+INSERT IGNORE INTO budget (id_budget, subtotal, total_cost, discount, material_cost, service_cost, created_at, discount_type, final_budget, fk_project) VALUES
+(1, 15000.00, 10000.00, 50.00, 8000.00, 2000.00, NOW(), 'PERCENT', TRUE, 1),
+(2, 35000.00, 25000.00, 250.00, 20000.00, 5000.00, NOW(), 'AMOUNT', TRUE, 2);
+
+INSERT IGNORE INTO budget_material (fk_budget, fk_material_url, quantity, price) VALUES
+(1, 1, 10, 900.00),
+(1, 4, 100, 12.00),
+(2, 2, 1, 3500.00),
+(2, 3, 2, 2800.00);
 
 -- 4. Views de Análise
 CREATE OR REPLACE VIEW VIEW_ANALYSIS_PROJECT_FINANCE AS
