@@ -12,13 +12,14 @@ services:
     ports:
       - "6380:6379"
     networks:
-      - bot_network
+      - solarize_network
 
   waha:
     image: devlikeapro/waha:latest
+    container_name: bot-waha
     platform: linux/amd64
     environment:
-      WHATSAPP_HOOK_URL: http://host.docker.internal:5678/webhook/webhook
+      WHATSAPP_HOOK_URL: http://bot-n8n:5678/webhook/webhook
       WHATSAPP_DEFAULT_ENGINE: GOWS
       WHATSAPP_HOOK_EVENTS: message
       WAHA_NO_API_KEY: true
@@ -30,27 +31,28 @@ services:
     ports:
       - "3000:3000"
     networks:
-      - bot_network
+      - solarize_network
 
   n8n:
     image: n8nio/n8n:latest
+    container_name: bot-n8n
     platform: linux/amd64
     environment:
-      WEBHOOK_URL: http://host.docker.internal:5678
-      N8N_HOST: host.docker.internal
+      WEBHOOK_URL: http://localhost:5678
+      N8N_HOST: localhost
       GENERIC_TIMEZONE: America/Sao_Paulo
       N8N_LOG_LEVEL: debug
       N8N_SECURE_COOKIE: false
       N8N_COMMUNITY_PACKAGES_ALLOW_TOOL_USAGE: true
-      BOT_SECRET: "solarize_whatsapp_bot_super_secret"
+      BOT_SECRET: "${BOT_SECRET}"
       N8N_BLOCK_ENV_ACCESS_IN_NODE: "false"
-      BACKEND_API_URL: http://host.docker.internal:8000
+      BACKEND_API_URL: http://backend-service:8000
     volumes:
       - n8n_data:/home/node/.n8n
     ports:
       - "5678:5678"
     networks:
-      - bot_network
+      - solarize_network
 
 volumes:
   waha_sessions:
@@ -58,6 +60,6 @@ volumes:
   n8n_data:
 
 networks:
-  bot_network:
-    name: bot_network
-    driver: bridge
+  solarize_network:
+    name: solarize_network
+    external: true

@@ -12,12 +12,27 @@ A stack utiliza:
 
 ## 1. Configuração de Ambiente
 
-As seguintes variáveis de ambiente estão declaradas no `docker-compose.yml`:
+As seguintes variáveis de ambiente essenciais estão declaradas no `docker-compose.yml`:
 
-- `BACKEND_API_URL`: Mapeada para `http://host.docker.internal:8000`. Permite que o n8n se comunique com a API REST do backend (Spring Boot).
-- `BOT_SECRET`: Chave criptográfica simétrica para autenticação nos endpoints do backend.
+- `BACKEND_API_URL`: Mapeada como `http://backend-service:8000`. Graças ao DNS nativo da engine interligada na `solarize_network`, o n8n se comunica com o Spring Boot pelo nome direto do contêiner, reduzindo o uso obsoleto do localhost do host limitante.
+- `BOT_SECRET`: Chave criptográfica simétrica para autenticação nos endpoints da API central.
 
-**Atenção:** A inicialização desta stack pressupõe que a stack **`apps`** esteja ativa.
+## Como Fazer Build / Atualizar Imagens
+
+Diferente dos módulos de *Backend* e *Frontend*, a infraestrutura do Bot **não exige** a compilação de imagens customizadas do seu código fonte local. Este módulo é orquestrado de forma standalone, através do download de imagens Docker pré-construídas e mantidas oficialmente pelas ferramentas:
+- `devlikeapro/waha:latest`
+- `n8nio/n8n:latest`
+- `redis:latest`
+
+Portanto, você não precisa fazer *build* ou *push* de imagens próprias para rodar o Bot.
+
+---
+
+## Iniciando o Serviço
+
+**Atenção:** A inicialização desta stack de automação agora pressupõe que a stack de **`backend`** (o monolito) esteja ativa e acessível na porta configurada via `BACKEND_API_URL`.
+
+Para provisionar o ambiente do bot, abra o terminal neste diretório e instancie os contêineres:
 
 ```bash
 docker-compose up -d

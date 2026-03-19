@@ -11,9 +11,9 @@ A stack utiliza:
 
 ## Ordem de Execução
 
-**ATENÇÃO:** É mandatório iniciar os containers desta pasta `storage` antes de qualquer outra stack (`apps` ou `bot`).
+**ATENÇÃO:** É mandatório iniciar os containers desta pasta `db` (storage) antes de qualquer outra stack (`backend`, `frontend` ou `bot`).
 
-A justificativa técnica para isso é que este `docker-compose.yml` expõe e cria nativamente a rede Docker `storage_network`. O container do Backend Spring Boot (localizado em `apps`) requer conectividade ativa com o container `mysql-db` atrelado a esta rede. A ausência prévia da rede resultará em falha na inicialização da stack de aplicações.
+A justificativa técnica para isso é que este `docker-compose.yml` expõe e cria nativamente a rede Docker `storage_network`. O container do Backend Spring Boot requer conectividade ativa com a base de dados (`mysql-db`) e o cache corporativo (`redis-multidb`) por meio desta rede.
 
 ## Como Executar
 

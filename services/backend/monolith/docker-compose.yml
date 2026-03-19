@@ -1,0 +1,37 @@
+version: "3.8"
+
+services:
+  backend-service:
+    image: raniersptech/springboot-web-backend:latest
+    platform: linux/amd64
+    container_name: backend-service
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/solarize?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_DATA_REDIS_HOST: redis-multidb
+      SPRING_DATA_REDIS_PORT: 6379
+      EMAIL: "${EMAIL}"
+      PASSWORD_EMAIL: "${PASSWORD_EMAIL}"
+      SERVER_PORT: 8000
+      BOT_SECRET: "${BOT_SECRET}"
+      BUCKET_NAME: "${BUCKET_NAME}"
+      AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID}"
+      AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY}"
+      AWS_SESSION_TOKEN: "${AWS_SESSION_TOKEN}"
+    ports:
+      - "8000:8000"
+    restart: on-failure
+    networks:
+      - solarize_network
+      - storage_network
+
+networks:
+  solarize_network:
+    name: solarize_network
+    driver: bridge
+  storage_network:
+    external: true
+    name: storage_network

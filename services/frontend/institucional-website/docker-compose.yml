@@ -1,0 +1,15 @@
+version: "3.8"
+
+services:
+  institutional-website:
+    image: raniersptech/institutional-website:latest
+    container_name: institutional-website
+    ports:
+      - "8081:3000"
+    networks:
+      - solarize_network
+
+networks:
+  solarize_network:
+    name: solarize_network
+    external: true

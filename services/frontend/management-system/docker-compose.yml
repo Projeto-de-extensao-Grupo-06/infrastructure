@@ -1,0 +1,15 @@
+version: "3.8"
+
+services:
+  management-system:
+    image: raniersptech/management-system:latest
+    container_name: management-system
+    ports:
+      - "8080:3000"
+    networks:
+      - solarize_network
+
+networks:
+  solarize_network:
+    name: solarize_network
+    external: true

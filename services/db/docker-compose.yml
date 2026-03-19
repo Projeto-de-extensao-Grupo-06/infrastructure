@@ -15,10 +15,10 @@ services:
     image: mysql:8.0
     container_name: mysql-db
     environment:
-      MYSQL_ROOT_PASSWORD: '06241234'
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
       MYSQL_DATABASE: solarize
-      MYSQL_USER: solarize
-      MYSQL_PASSWORD: '06241234'
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
     ports:
       - "3307:3306" # Exposta na porta 3307
     volumes:

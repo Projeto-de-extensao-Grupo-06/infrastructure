@@ -1,0 +1,33 @@
+version: "3.8"
+
+services:
+  microservice-db:
+    image: mysql:8
+    container_name: microservice-db
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: schedule_notification_db
+    ports:
+      - "3306:3306"
+    networks:
+      - solarize_network
+
+  microservice-app:
+    build: ../../../../schedule-notification
+    container_name: schedule-notification
+    ports:
+      - "8082:8080"
+    env_file:
+      - ../../../../schedule-notification/.env
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://microservice-db:3306/schedule_notification_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+    restart: on-failure
+    depends_on:
+      - microservice-db
+    networks:
+      - solarize_network
+
+networks:
+  solarize_network:
+    name: solarize_network
+    external: true
