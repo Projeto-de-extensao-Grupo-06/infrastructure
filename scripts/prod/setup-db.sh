@@ -1,0 +1,45 @@
+#!/bin/bash
+# TODO - Testar budega de script
+# ==============================================================================
+# Ambiente: PRODUÇÃO
+# Camada: Database EC2
+# Objetivo: Bootstrap nativo focado em banco de dados isolado no AWS
+# ==============================================================================
+set -e
+if [ "$EUID" -eq 0 ]; then
+    exec > >(tee /var/log/user-data-prod-db.log|logger -t user-data -s 2>/dev/console) 2>&1
+    export DEBIAN_FRONTEND=noninteractive
+fi
+
+echo "➡️ [PROD-DB] Atualizando S.O..."
+sudo apt-get update && sudo apt-get install -y ca-certificates curl gnupg lsb-release git
+
+echo "➡️ [PROD-DB] Instalando Docker..."
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh && sudo apt-get install -y docker-compose-plugin || true
+sudo systemctl enable docker && sudo systemctl start docker
+
+TARGET_USER=${SUDO_USER:-ubuntu}
+if ! id "$TARGET_USER" &>/dev/null; then TARGET_USER="root"; fi
+sudo usermod -aG docker "$TARGET_USER" || true
+
+echo "➡️ [PROD-DB] Configurando Infraestrutura da Base de Dados..."
+sudo su - "$TARGET_USER" -c "
+  cd ~
+  if [ ! -d 'docker-composes' ]; then
+    git clone https://github.com/Projeto-de-extensao-Grupo-06/docker-composes.git
+  else
+    cd docker-composes && git pull && cd ..
+  fi
+
+  cd docker-composes
+  echo 'Aguardando Docker daemon...'
+  while ! docker info >/dev/null 2>&1; do sleep 2; done
+
+  # Injeção via AWS Parameter Store, Secrets Manager, etc., pode substituir o step abaixo.
+  # Assumindo que haverá injeção ambiental primária para a camada:
+  cd services/db
+  docker compose pull
+  docker compose --env-file ../../.env up -d
+"
+echo "✅ [PROD-DB] Provisionamento Finalizado!"

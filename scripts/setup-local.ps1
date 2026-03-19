@@ -1,5 +1,7 @@
-# start-local.ps1
+# setup-local.ps1
 # Script para levantar todo o ambiente localmente na ordem correta
+
+Set-Location "$PSScriptRoot\.."
 
 Write-Host "Inicializando a base da infraestrutura (Redes e Bancos)..." -ForegroundColor Cyan
 Set-Location services/db
