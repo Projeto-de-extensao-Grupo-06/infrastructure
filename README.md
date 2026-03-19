@@ -16,7 +16,8 @@ Recentemente, a arquitetura da aplicação foi **pulverizada** (separada) em dif
 
 Outras pastas relevantes no repositório geral:
 - `proxy/`: Configurações de proxy reverso e balanceadores de carga.
-- `terraform/`: Scripts de provisionamento em nuvem com ferramentas de Infraestrutura como Código (IaC).
+- `scripts/`: Scripts executáveis Bash e PowerShell separados por ambiente (Local, QA, Produção) para deploy limpo.
+- `terraform/`: Modelos de Infraestrutura como Código (IaC).
 
 ## Como utilizar
 
@@ -32,13 +33,30 @@ Para rodar e configurar um componente específico, acesse as documentações de 
 
 ## Início Rápido (Execução Local Completa)
 
-Para testes, homologações ou desenvolvimento contínuo local, foi providenciado o script `start-local.ps1` que abstrai a complexidade do cluster e obedece rigidamente à ordem cronológica de inicializações exigidas pelas redes (Banco de Dados Primário ➔ Backend Originador da Rede ➔ Interfaces e Bots).
+Para testes, homologações ou desenvolvimento contínuo local, foram providenciados scripts abstraem a complexidade do cluster e obedecem rigidamente à ordem cronológica de inicializações (Banco de Dados Primário ➔ Backend Originador da Rede ➔ Interfaces e Bots).
 
-Abra um terminal PowerShell na **raiz** deste diretório e execute:
+Abra um terminal na **raiz** deste diretório e execute o script apropriado ao seu ecossistema:
+
+**Windows (PowerShell):**
 ```powershell
-.\start-local.ps1
+.\scripts\setup-local.ps1
 ```
+
+**Linux/Mac (Bash WSL):**
+```bash
+./scripts/setup-local.sh
+```
+
 Isso subirá de uma só vez o MySQL, o Redis-Multidb, o Monolito do Spring Boot, os contêineres do Sistema de Gerenciamento, do Site e dos serviços nativos do WhatsApp IA.
+
+---
+
+## Deployments e Ambientes Segregados
+
+Seguindo fidedignamente a arquitetura pulverizada da nuvem (onde sub-redes isolam frontends, backends e workers), a pasta `scripts/` detém gatilhos específicos de *User Data* para VMs isoladas:
+
+- **`scripts/setup-qa.sh`**: Instala a infra inteira em uma única máquina Linux para rodadas de testes integrados.
+- **`scripts/prod/setup-[camada].sh`**: Cada arquivo deste atua nativamente ativando só a camada designada (`db`, `backend`, `frontend`, `bot`), poupando espaço nas instâncias e limitando a esteira apenas ao que a VM foi desenhada para processar.
 
 ---
 
