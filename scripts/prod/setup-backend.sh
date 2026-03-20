@@ -42,12 +42,21 @@ sudo su - "$TARGET_USER" -c "
     echo "$GITHUB_ACCESS_TOKEN" | docker login ghcr.io -u "$GITHUB_USERNAME" --password-stdin
   fi
 
-  cd services/backend/monolith
-  docker compose pull
-  docker compose --env-file ../../../.env up -d
+  # Diferenciação de apps baseada em variável de ambiente (BACKEND_TYPE)
+  if [[ "$BACKEND_TYPE" == "monolith" || -z "$BACKEND_TYPE" ]]; then
+    echo "➡️ [PROD-BACKEND] Iniciando Monolito..."
+    cd services/backend/monolith
+    docker compose pull
+    docker compose --env-file ../../../.env up -d
+    cd ../../..
+  fi
   
-  cd ../microservice
-  docker compose pull
-  docker compose --env-file ../../../.env up -d --build
+  if [[ "$BACKEND_TYPE" == "microservice" || -z "$BACKEND_TYPE" ]]; then
+    echo "➡️ [PROD-BACKEND] Iniciando Microserviço..."
+    cd services/backend/microservice
+    docker compose pull
+    docker compose --env-file ../../../.env up -d --build
+    cd ../../..
+  fi
 "
 echo "✅ [PROD-BACKEND] Provisionamento Finalizado!"

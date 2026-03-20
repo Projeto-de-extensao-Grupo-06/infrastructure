@@ -42,12 +42,21 @@ sudo su - "$TARGET_USER" -c "
     echo "$GITHUB_ACCESS_TOKEN" | docker login ghcr.io -u "$GITHUB_USERNAME" --password-stdin
   fi
 
-  cd services/frontend/institucional-website
-  docker compose pull
-  docker compose --env-file ../../../.env up -d
+  # Diferenciação de apps baseada em variável de ambiente (FRONTEND_TYPE)
+  if [[ "$FRONTEND_TYPE" == "institutional" || -z "$FRONTEND_TYPE" ]]; then
+    echo "➡️ [PROD-FRONT] Iniciando Institucional Website..."
+    cd services/frontend/institucional-website
+    docker compose pull
+    docker compose --env-file ../../../.env up -d
+    cd ../../..
+  fi
 
-  cd ../management-system
-  docker compose pull
-  docker compose --env-file ../../../.env up -d
+  if [[ "$FRONTEND_TYPE" == "management" || -z "$FRONTEND_TYPE" ]]; then
+    echo "➡️ [PROD-FRONT] Iniciando Management System..."
+    cd services/frontend/management-system
+    docker compose pull
+    docker compose --env-file ../../../.env up -d
+    cd ../../..
+  fi
 "
 echo "✅ [PROD-FRONT] Provisionamento Finalizado!"

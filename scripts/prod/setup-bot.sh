@@ -36,8 +36,18 @@ sudo su - "$TARGET_USER" -c "
   echo 'Aguardando Docker daemon...'
   while ! docker info >/dev/null 2>&1; do sleep 2; done
 
-  cd services/bot
-  docker compose pull
-  docker compose --env-file ../../.env up -d
+  # Diferenciação de apps baseada em variável de ambiente (BOT_TYPE)
+  if [[ "$BOT_TYPE" == "chatbot" || -z "$BOT_TYPE" ]]; then
+    echo "➡️ [PROD-BOT] Iniciando Chatbot Stack (n8n, WAHA, Redis)..."
+    cd services/bot
+    docker compose pull
+    docker compose --env-file ../../.env up -d
+    cd ../..
+  fi
+
+  if [[ "$BOT_TYPE" == "webscraping" ]]; then
+    echo "➡️ [PROD-BOT] Camada de Webscraping detectada. (Aguardando configuração de serviço em services/webscraping)"
+    # cd services/webscraping && docker compose up -d
+  fi
 "
 echo "✅ [PROD-BOT] Provisionamento Finalizado!"

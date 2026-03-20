@@ -9,7 +9,7 @@ resource "aws_security_group" "this" {
       from_port   = ingress.value
       to_port     = ingress.value
       protocol    = "tcp"
-      cidr_blocks = ["0.0.0.0/0"]
+      cidr_blocks = var.allowed_cidr_blocks
     }
   }
 

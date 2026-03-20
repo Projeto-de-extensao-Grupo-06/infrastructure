@@ -47,8 +47,9 @@ module "ec2_frontend_1" {
   instance_type  = "t3.small"
   vpc_id         = module.vpc_prod.vpc_id
   subnet_id      = module.vpc_prod.private_subnet_ids[0]
-  frontend_ports = [22, 3000, 8080, 8081]
-  user_data      = file("../../../scripts/prod/setup-frontend.sh")
+  frontend_ports = [22, 8081] # Apenas Institucional Website
+  allowed_cidr_blocks = ["10.0.0.0/16"]
+  user_data      = replace(file("../../../scripts/prod/setup-frontend.sh"), "#!/bin/bash", "#!/bin/bash\nexport FRONTEND_TYPE=\"institutional\"")
 }
 
 module "ec2_frontend_2" {
@@ -59,8 +60,9 @@ module "ec2_frontend_2" {
   instance_type  = "t3.small"
   vpc_id         = module.vpc_prod.vpc_id
   subnet_id      = module.vpc_prod.private_subnet_ids[0]
-  frontend_ports = [22, 3000, 8080, 8081]
-  user_data      = file("../../../scripts/prod/setup-frontend.sh")
+  frontend_ports = [22, 8080] # Apenas Management System
+  allowed_cidr_blocks = ["10.0.0.0/16"]
+  user_data      = replace(file("../../../scripts/prod/setup-frontend.sh"), "#!/bin/bash", "#!/bin/bash\nexport FRONTEND_TYPE=\"management\"")
 }
 
 module "ec2_backend_1" {
@@ -71,8 +73,9 @@ module "ec2_backend_1" {
   instance_type  = "t3.medium"
   vpc_id         = module.vpc_prod.vpc_id
   subnet_id      = module.vpc_prod.private_subnet_ids[1]
-  frontend_ports = [22, 8000]
-  user_data      = file("../../../scripts/prod/setup-backend.sh")
+  frontend_ports = [22, 8000] # Apenas Monolito
+  allowed_cidr_blocks = ["10.0.0.0/16"]
+  user_data      = replace(file("../../../scripts/prod/setup-backend.sh"), "#!/bin/bash", "#!/bin/bash\nexport BACKEND_TYPE=\"monolith\"")
 }
 
 module "ec2_backend_2" {
@@ -83,8 +86,9 @@ module "ec2_backend_2" {
   instance_type  = "t3.medium"
   vpc_id         = module.vpc_prod.vpc_id
   subnet_id      = module.vpc_prod.private_subnet_ids[1]
-  frontend_ports = [22, 8000]
-  user_data      = file("../../../scripts/prod/setup-backend.sh")
+  frontend_ports = [22, 8082] # Apenas Microserviço
+  allowed_cidr_blocks = ["10.0.0.0/16"]
+  user_data      = replace(file("../../../scripts/prod/setup-backend.sh"), "#!/bin/bash", "#!/bin/bash\nexport BACKEND_TYPE=\"microservice\"")
 }
 
 module "ec2_chatbot" {
@@ -96,7 +100,8 @@ module "ec2_chatbot" {
   vpc_id         = module.vpc_prod.vpc_id
   subnet_id      = module.vpc_prod.private_subnet_ids[2]
   frontend_ports = [22, 3000, 5678]
-  user_data      = file("../../../scripts/prod/setup-bot.sh")
+  allowed_cidr_blocks = ["10.0.0.0/16"]
+  user_data      = replace(file("../../../scripts/prod/setup-bot.sh"), "#!/bin/bash", "#!/bin/bash\nexport BOT_TYPE=\"chatbot\"")
 }
 
 module "ec2_webscraping" {
@@ -108,7 +113,8 @@ module "ec2_webscraping" {
   vpc_id         = module.vpc_prod.vpc_id
   subnet_id      = module.vpc_prod.private_subnet_ids[2]
   frontend_ports = [22, 5000]
-  user_data      = file("../../../scripts/prod/setup-bot.sh")
+  allowed_cidr_blocks = ["10.0.0.0/16"]
+  user_data      = replace(file("../../../scripts/prod/setup-bot.sh"), "#!/bin/bash", "#!/bin/bash\nexport BOT_TYPE=\"webscraping\"")
 }
 
 module "ec2_db" {
@@ -120,6 +126,7 @@ module "ec2_db" {
   vpc_id         = module.vpc_prod.vpc_id
   subnet_id      = module.vpc_prod.private_subnet_ids[3]
   frontend_ports = [22, 3306, 6379]
+  allowed_cidr_blocks = ["10.0.0.0/16"]
   user_data      = file("../../../scripts/prod/setup-db.sh")
 }
 
