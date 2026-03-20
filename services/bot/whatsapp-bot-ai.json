@@ -299,7 +299,7 @@
           "parameters": [
             {
               "name": "x-bot-secret",
-              "value": "solarize_whatsapp_bot_super_secret"
+              "value": "solarway_whatsapp_bot_super_secret"
             }
           ]
         },
@@ -329,7 +329,7 @@
         1008
       ],
       "id": "0a100d97-8e89-4866-8634-5353099a04e7",
-      "name": "Vendedor AI Solarize"
+      "name": "Vendedor AI Solarway"
     },
     {
       "parameters": {
@@ -618,14 +618,14 @@
       "main": [
         [
           {
-            "node": "Vendedor AI Solarize",
+            "node": "Vendedor AI Solarway",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Vendedor AI Solarize": {
+    "Vendedor AI Solarway": {
       "main": [
         [
           {
@@ -640,7 +640,7 @@
       "ai_memory": [
         [
           {
-            "node": "Vendedor AI Solarize",
+            "node": "Vendedor AI Solarway",
             "type": "ai_memory",
             "index": 0
           }
@@ -651,7 +651,7 @@
       "ai_languageModel": [
         [
           {
-            "node": "Vendedor AI Solarize",
+            "node": "Vendedor AI Solarway",
             "type": "ai_languageModel",
             "index": 0
           }
@@ -662,7 +662,7 @@
       "ai_tool": [
         [
           {
-            "node": "Vendedor AI Solarize",
+            "node": "Vendedor AI Solarway",
             "type": "ai_tool",
             "index": 0
           }
@@ -673,7 +673,7 @@
       "ai_tool": [
         [
           {
-            "node": "Vendedor AI Solarize",
+            "node": "Vendedor AI Solarway",
             "type": "ai_tool",
             "index": 0
           }
@@ -684,7 +684,7 @@
       "ai_tool": [
         [
           {
-            "node": "Vendedor AI Solarize",
+            "node": "Vendedor AI Solarway",
             "type": "ai_tool",
             "index": 0
           }

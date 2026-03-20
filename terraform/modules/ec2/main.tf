@@ -1,5 +1,5 @@
 resource "aws_security_group" "this" {
-  name        = "solarize-sg-${var.instance_name}-${var.environment}"
+  name        = "solarway-sg-${var.instance_name}-${var.environment}"
   description = "Permite trafego de entrada nas portas configuradas"
   vpc_id      = var.vpc_id
 
@@ -21,7 +21,7 @@ resource "aws_security_group" "this" {
   }
 
   tags = {
-    Name        = "solarize-sg-${var.instance_name}-${var.environment}"
+    Name        = "solarway-sg-${var.instance_name}-${var.environment}"
     Environment = var.environment
   }
 }
@@ -39,10 +39,10 @@ resource "aws_instance" "this" {
     volume_type = "gp3"
   }
 
+  user_data = var.user_data != "" ? var.user_data : null
+
   tags = {
-    Name        = "solarize-ec2-${var.instance_name}-${var.environment}"
+    Name        = "solarway-ec2-${var.instance_name}-${var.environment}"
     Environment = var.environment
   }
-
-  user_data = var.user_data != "" ? var.user_data : null
 }

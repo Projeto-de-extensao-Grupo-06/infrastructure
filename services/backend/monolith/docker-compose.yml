@@ -7,7 +7,7 @@ services:
     container_name: backend-service
     environment:
       SPRING_PROFILES_ACTIVE: prod
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/solarize?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/solarway?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
@@ -25,12 +25,12 @@ services:
       - "${PORT_BACKEND_MONOLITH:-8000}:8000"
     restart: on-failure
     networks:
-      - solarize_network
+      - solarway_network
       - storage_network
 
 networks:
-  solarize_network:
-    name: solarize_network
+  solarway_network:
+    name: solarway_network
     driver: bridge
   storage_network:
     external: true

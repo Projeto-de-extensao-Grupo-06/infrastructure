@@ -35,9 +35,21 @@ Ambiente escalonado com ênfase em alta disponibilidade (HA), isolamento de rede
   - **Zone D ("Persistence")**: Região protegida dedicada estritamente ao tráfego do pool de conexões com os bancos de dados (MySQL, Redis).
 - **Buckets S3**: Instâncias seguras de armazenamento (`raw`, `trusted`, `refined`).
 
+---
+
+## Configuração de Acesso (AWS CLI)
+
+Para garantir que o Terraform possua as permissões necessárias, as credenciais devem ser configuradas via **AWS CLI**. A configuração via variáveis de ambiente no arquivo `.env` não é recomendada para este workflow devido a possíveis inconsistências.
+
+1. **Instalação**: Caso não possua o AWS CLI, instale seguindo o [Manual Oficial de Instalação](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html).
+2. **Configuração**: Execute o comando abaixo e insira sua `Access Key ID` e `Secret Access Key`:
+   ```bash
+   aws configure
+   ```
+
 ## Execução e Aplicação de Mudanças
 
-O provisionamento segue o fluxo de trabalho imutável via CLI Terraform. Navegue até o módulo do ambiente alvo e inicie os operadores padrões:
+O provisionamento segue o fluxo de trabalho imutável via CLI Terraform. Certifique-se de ter executado o `aws configure` antes de iniciar:
 
 ```bash
 cd environments/qa

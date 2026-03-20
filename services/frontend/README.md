@@ -44,6 +44,6 @@ Uma vez que as imagens estejam sincronizadas (seja recém publicadas após build
    ```
 *(O mesmo princípio aplica-se ao `institucional-website`).*
 
-A infraestrutura definirá as portas mapeadas (ex: porta `8080`, ou `8081` do host para o `3000` do client interno), ligando-os na rede trans-arquitetural referenciada como `solarize_network`.
+A infraestrutura definirá as portas mapeadas (ex: porta `8080`, ou `8081` do host para o `3000` do client interno), ligando-os na rede trans-arquitetural referenciada como `solarway_network`.
 
-> **⚠️ Atenção a Integração**: Os frontends orquestrados através desses containers buscam chamadas HTTP para o Backend atráves do DNS interno (ex: apontamentos diretos usando o proxy local ou o IP público, dependendo da variável de ambiente setada na pipeline React). Para chamadas Server-Side, garanta a dependência contínua aos construtores da `solarize_network`.
+> **⚠️ Atenção a Integração**: Os frontends orquestrados através desses containers buscam chamadas HTTP para o Backend atráves do DNS interno (ex: apontamentos diretos usando o proxy local ou o IP público, dependendo da variável de ambiente setada na pipeline React). Para chamadas Server-Side, garanta a dependência contínua aos construtores da `solarway_network`.

@@ -4,7 +4,7 @@ resource "aws_vpc" "this" {
   enable_dns_support   = true
 
   tags = {
-    Name        = "solarize-vpc-${var.environment}"
+    Name        = "solarway-vpc-${var.environment}"
     Environment = var.environment
   }
 }
@@ -13,7 +13,7 @@ resource "aws_internet_gateway" "this" {
   vpc_id = aws_vpc.this.id
 
   tags = {
-    Name        = "solarize-igw-${var.environment}"
+    Name        = "solarway-igw-${var.environment}"
     Environment = var.environment
   }
 }
@@ -26,7 +26,7 @@ resource "aws_subnet" "public" {
   map_public_ip_on_launch = true
 
   tags = {
-    Name        = "solarize-public-subnet-${var.environment}-${count.index + 1}"
+    Name        = "solarway-public-subnet-${var.environment}-${count.index + 1}"
     Environment = var.environment
   }
 }
@@ -38,7 +38,7 @@ resource "aws_subnet" "private" {
   availability_zone = var.azs[count.index]
 
   tags = {
-    Name        = "solarize-private-subnet-${var.environment}-${count.index + 1}"
+    Name        = "solarway-private-subnet-${var.environment}-${count.index + 1}"
     Environment = var.environment
   }
 }
@@ -52,7 +52,7 @@ resource "aws_route_table" "public" {
   }
 
   tags = {
-    Name        = "solarize-public-rt-${var.environment}"
+    Name        = "solarway-public-rt-${var.environment}"
     Environment = var.environment
   }
 }

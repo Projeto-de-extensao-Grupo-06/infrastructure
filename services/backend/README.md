@@ -62,4 +62,4 @@ docker-compose up -d --build
 ```
 > **Nota de Build**: O manifesto apontará o contexto de compilação relativo (`build: ../../../../schedule-notification`) localizando o repositório-irmão do código fonte fora deste repositório de infra. Para que a compilação local da imagem do microserviço funcione, ele precisa encontrar e ler um `.env` existente nesse repositório fonte.
 
-Em ambos cenários o app tenta participar de instâncias como `storage_network` ou `solarize_network`. Repare que o `monolith` constrói a bridge de comunicação primária *solarize_network*. (Se obtiver erro por pontes externas remanescentes, exija a criação delas previamente no host `docker network create [nome]`).
+Em ambos cenários o app tenta participar de instâncias como `storage_network` ou `solarway_network`. Repare que o `monolith` constrói a bridge de comunicação primária *solarway_network*. (Se obtiver erro por pontes externas remanescentes, exija a criação delas previamente no host `docker network create [nome]`).

@@ -12,7 +12,7 @@ services:
     ports:
       - "${PORT_BOT_REDIS:-6380}:6379"
     networks:
-      - solarize_network
+      - solarway_network
 
   waha:
     image: devlikeapro/waha:latest
@@ -31,7 +31,7 @@ services:
     ports:
       - "${PORT_WAHA:-3000}:3000"
     networks:
-      - solarize_network
+      - solarway_network
 
   n8n:
     image: n8nio/n8n:latest
@@ -52,7 +52,7 @@ services:
     ports:
       - "${PORT_N8N:-5678}:5678"
     networks:
-      - solarize_network
+      - solarway_network
 
 volumes:
   waha_sessions:
@@ -60,6 +60,6 @@ volumes:
   n8n_data:
 
 networks:
-  solarize_network:
-    name: solarize_network
+  solarway_network:
+    name: solarway_network
     external: true

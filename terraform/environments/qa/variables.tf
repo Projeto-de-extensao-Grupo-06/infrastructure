@@ -19,17 +19,23 @@ variable "instance_type" {
 variable "bucket_bronze_name" {
   description = "Nome do bucket da camada Bronze (Raw)"
   type        = string
-  default     = "solarize-datalake-bronze"
+  default     = "solarway-datalake-bronze"
 }
 
 variable "bucket_silver_name" {
   description = "Nome do bucket da camada Silver (Trusted)"
   type        = string
-  default     = "solarize-datalake-silver"
+  default     = "solarway-datalake-silver"
 }
 
 variable "bucket_gold_name" {
   description = "Nome do bucket da camada Gold (Refined/Platinum)"
   type        = string
-  default     = "solarize-datalake-gold"
+  default     = "solarway-datalake-gold"
+}
+
+variable "key_name" {
+  description = "Nome da chave SSH na AWS"
+  type        = string
+  default     = "solarway"
 }

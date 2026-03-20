@@ -1,9 +1,9 @@
 SET NAMES utf8mb4;
-ALTER DATABASE solarize CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+ALTER DATABASE solarway CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- Configurações Globais e Permissões
-CREATE USER IF NOT EXISTS 'solarize'@'%' IDENTIFIED BY '06241234';
-GRANT ALL PRIVILEGES ON *.* TO 'solarize'@'%' WITH GRANT OPTION;
+CREATE USER IF NOT EXISTS 'solarway'@'%' IDENTIFIED BY '06241234';
+GRANT ALL PRIVILEGES ON *.* TO 'solarway'@'%' WITH GRANT OPTION;
 FLUSH PRIVILEGES;
 
 -- 1. Funções Base
@@ -174,10 +174,10 @@ INSERT IGNORE INTO permission_group (id_permission_group, role, main_module, acc
 (3, 'SECRETÁRIA', 'CLIENT_LIST', 15, 3, 15, 1);
 
 INSERT IGNORE INTO coworker (id_coworker, first_name, last_name, email, phone, password, is_active, fk_permission_group) VALUES
-(1, 'Sálvio', 'Nobrega', 'salvio.admin@solarize.com.br', '11987654321', '$2a$12$dUlemf8rtZhoMu/nH.5XtOmerR.uxfLp5vmVbYVrzduguD.d/jhWG', TRUE, 1),
-(2, 'Cristiano', 'Ribeiro', 'cristiano.eng@solarize.com.br', '11912345678', '$2a$12$dUlemf8rtZhoMu/nH.5XtOmerR.uxfLp5vmVbYVrzduguD.d/jhWG', TRUE, 2),
-(3, 'Maria', 'Gomes', 'maria.tec@solarize.com.br', '11998765432', '$2a$12$dUlemf8rtZhoMu/nH.5XtOmerR.uxfLp5vmVbYVrzduguD.d/jhWG', TRUE, 2),
-(4, 'Ana', 'Vendas', 'ana.sales@solarize.com.br', '11955554444', '$2a$12$dUlemf8rtZhoMu/nH.5XtOmerR.uxfLp5vmVbYVrzduguD.d/jhWG', TRUE, 3),
+(1, 'Sálvio', 'Nobrega', 'salvio.admin@solarway.com.br', '11987654321', '$2a$12$dUlemf8rtZhoMu/nH.5XtOmerR.uxfLp5vmVbYVrzduguD.d/jhWG', TRUE, 1),
+(2, 'Cristiano', 'Ribeiro', 'cristiano.eng@solarway.com.br', '11912345678', '$2a$12$dUlemf8rtZhoMu/nH.5XtOmerR.uxfLp5vmVbYVrzduguD.d/jhWG', TRUE, 2),
+(3, 'Maria', 'Gomes', 'maria.tec@solarway.com.br', '11998765432', '$2a$12$dUlemf8rtZhoMu/nH.5XtOmerR.uxfLp5vmVbYVrzduguD.d/jhWG', TRUE, 2),
+(4, 'Ana', 'Vendas', 'ana.sales@solarway.com.br', '11955554444', '$2a$12$dUlemf8rtZhoMu/nH.5XtOmerR.uxfLp5vmVbYVrzduguD.d/jhWG', TRUE, 3),
 (5, 'Bryan', 'Rocha', 'bryangomesrocha@gmail.com', '11964275054', '$2a$12$dUlemf8rtZhoMu/nH.5XtOmerR.uxfLp5vmVbYVrzduguD.d/jhWG', TRUE, 1);
 
 INSERT IGNORE INTO address (id_address, postal_code, street_name, number, neighborhood, city, state, type) VALUES

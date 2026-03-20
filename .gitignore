@@ -1,19 +1,12 @@
-# Log files
 *.log
 
-# Environment variables
 .env
 
-# MacOS
-.DS_Store
-
-# IDEs and Editors
 .idea/
 .vscode/
 *.swp
 *.swo
 
-# Terraform
 **/.terraform/*
 **/.terraform.lock.hcl
 .terraform
@@ -32,5 +25,6 @@ override.tf.json
 terraform.rc
 .terraform.lock.hcl
 
-# docker-compose overrides
 docker-compose.override.yml
+*.tfplan
+*.pem

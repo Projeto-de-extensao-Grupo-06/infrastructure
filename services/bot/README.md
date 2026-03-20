@@ -14,7 +14,7 @@ A stack utiliza:
 
 As seguintes variáveis de ambiente essenciais estão declaradas no `docker-compose.yml`:
 
-- `BACKEND_API_URL`: Mapeada como `http://backend-service:8000`. Graças ao DNS nativo da engine interligada na `solarize_network`, o n8n se comunica com o Spring Boot pelo nome direto do contêiner, reduzindo o uso obsoleto do localhost do host limitante.
+- `BACKEND_API_URL`: Mapeada como `http://backend-service:8000`. Graças ao DNS nativo da engine interligada na `solarway_network`, o n8n se comunica com o Spring Boot pelo nome direto do contêiner, reduzindo o uso obsoleto do localhost do host limitante.
 - `BOT_SECRET`: Chave criptográfica simétrica para autenticação nos endpoints da API central.
 
 ## Como Atualizar Imagens (GitHub Packages)

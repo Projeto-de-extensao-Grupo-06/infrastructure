@@ -11,7 +11,7 @@ services:
     ports:
       - "${PORT_MICROSERVICE_DB:-3306}:3306"
     networks:
-      - solarize_network
+      - solarway_network
 
   microservice-app:
     image: ghcr.io/projeto-de-extensao-grupo-06/schedule-notification:latest
@@ -19,16 +19,18 @@ services:
     ports:
       - "${PORT_BACKEND_MICROSERVICE:-8082}:8080"
     env_file:
-      - ../../../../schedule-notification/.env
+      - ../../../.env
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://microservice-db:3306/schedule_notification_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
     restart: on-failure
     depends_on:
       - microservice-db
     networks:
-      - solarize_network
+      - solarway_network
 
 networks:
-  solarize_network:
-    name: solarize_network
+  solarway_network:
+    name: solarway_network
     external: true

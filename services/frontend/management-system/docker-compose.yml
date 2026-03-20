@@ -7,9 +7,9 @@ services:
     ports:
       - "${PORT_MANAGEMENT_SYSTEM:-8080}:3000"
     networks:
-      - solarize_network
+      - solarway_network
 
 networks:
-  solarize_network:
-    name: solarize_network
+  solarway_network:
+    name: solarway_network
     external: true
