@@ -47,14 +47,14 @@ resource "null_resource" "deploy" {
     host        = module.ec2_qa.public_ip
   }
 
-  # 1. Preparar pasta remota
+  # Preparar pasta remota
   provisioner "remote-exec" {
     inline = [
       "mkdir -p /tmp/solarway"
     ]
   }
 
-  # 2. Enviar .env e pasta de serviços
+  # Enviar .env e pasta de serviços
   provisioner "file" {
     source      = "../../../.env"
     destination = "/tmp/solarway/.env"
@@ -65,10 +65,12 @@ resource "null_resource" "deploy" {
     destination = "/tmp/solarway/services"
   }
 
-  # 3. Subir containers (com wait loop robusto para Docker)
+  # Subir containers (com wait loop robusto para Docker)
   provisioner "remote-exec" {
     inline = [
       "cd /tmp/solarway",
+      "echo '➡️ Ajustando URLs no .env para o IP Público: ${module.ec2_qa.public_ip}...'",
+      "sed -i 's/localhost:8000/${module.ec2_qa.public_ip}:8000/g' .env",
       "echo '➡️ Aguardando o Docker ser instalado e iniciado (User Data)...'",
       "while ! sudo docker version >/dev/null 2>&1; do sleep 5; done",
       "echo '🔐 Autenticando no GHCR...'",
