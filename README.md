@@ -56,7 +56,8 @@ Isso subirá de uma só vez o MySQL, o Redis-Multidb, o Monolito do Spring Boot,
 Seguindo fidedignamente a arquitetura pulverizada da nuvem (onde sub-redes isolam frontends, backends e workers), a pasta `scripts/` detém gatilhos específicos de *User Data* para VMs isoladas:
 
 - **`scripts/setup-qa.sh`**: Instala a infra inteira em uma única máquina Linux para rodadas de testes integrados.
-- **`scripts/prod/setup-[camada].sh`**: Cada arquivo deste atua nativamente ativando só a camada designada (`db`, `backend`, `frontend`, `bot`), poupando espaço nas instâncias e limitando a esteira apenas ao que a VM foi desenhada para processar.
+- **`scripts/prod/setup-[camada].sh`**: Cada arquivo deste atua nativamente ativando só a camada designada (`db`, `backend`, `frontend`, `bot`). 
+  - **Diferenciação via Injeção**: Em produção, os scripts suportam as variáveis `FRONTEND_TYPE`, `BACKEND_TYPE` e `BOT_TYPE` para subir apenas o serviço específico daquela VM (ex: apenas Monolito ou apenas Website Institucional), otimizando recursos.
 
 ---
 
@@ -79,13 +80,16 @@ Para processar comunicações TLS/SSL e atuar como Gateway HTTP/HTTPS centraliza
 - **Estratégia Nuvem**: O proxy requer leitura física de certificados. Em domínios remotos cloud, nunca inicie direto pelo `docker-compose up -d`. Ao invés disso, execute o utilitário embarcado `./init-letsencrypt.sh`, após pré-configurar os domínios no `config/app.conf`. 
 - **Homologação Local**: Para debug de rotas via localhost, emita certificados autoassinados (self-signed key e crt) descartáveis e altere as chaves de rede (`hosts` OS) apontando ao local.
 
+> [!WARNING]
+> **Status do Proxy**: O componente de Proxy reverso está em fase de estruturação inicial. Atualmente, ele está **incompleto** e os testes de roteamento e SSL ainda não foram aplicados/validados para o ambiente de nuvem.
+
 ---
 
 ## Infraestrutura como Código - AWS (Terraform)
 
 No repertório **`terraform/`**, residem os scripts padronizados focados em alocação de EC2, S3 e VPCs. Seu workflow modular foi pensado com estratégias de escala isoladas por ambiente:
 
-- **Ambiente DEV (`environments/dev`)**: VPC desenhada em Single-AZ. Sobe máquinas menos robustas aglomerando todas as instâncias e redes localmente. Usada primariamente como Sandbox com as três fases do datalake simplificadas.
+- **Ambiente QA (`environments/qa`)**: (Anteriormente `dev`). VPC desenhada em Single-AZ. Consolida todos os serviços em uma única VM (`t3.large`) para testes rápidos. Provisiona as três fases do Data Lake: `bronze`, `silver` e `gold`.
 - **Ambiente PROD (`environments/prod`)**: Topologia de Alta Disponibilidade. Provisiona Sub-redes Públicas (Proxy) e Privadas, isolando rigidamente Frontend, Backend, Automations e Datastore Persistence.
 
 Todo provisionamento ocorre através do CLI: `terraform init`, `terraform plan` e consequente aplicação (`terraform apply`).
