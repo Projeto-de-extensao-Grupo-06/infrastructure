@@ -3,6 +3,19 @@
 
 Set-Location "$PSScriptRoot\.."
 
+# Load GitHub Credentials from .env
+Get-Content .env | Foreach-Object {
+    $name, $value = $_.split('=', 2)
+    if ($name -match "GITHUB_") {
+        [Environment]::SetEnvironmentVariable($name, $value, "Process")
+    }
+}
+
+if ($env:GITHUB_ACCESS_TOKEN -and $env:GITHUB_USERNAME) {
+    Write-Host "Realizando login no GitHub Packages..." -ForegroundColor Magenta
+    echo $env:GITHUB_ACCESS_TOKEN | docker login ghcr.io -u $env:GITHUB_USERNAME --password-stdin
+}
+
 Write-Host "Inicializando a base da infraestrutura (Redes e Bancos)..." -ForegroundColor Cyan
 Set-Location services/db
 docker-compose --env-file ../../.env up -d

@@ -94,5 +94,7 @@ Todo provisionamento ocorre através do CLI: `terraform init`, `terraform plan` 
 
 ## Orientações Gerais de Fluxo de Imagens e Build
 
-1. **Build e Push das Imagens**: Nos projetos originais de código aberto (`springboot`, `management-system`, etc.), as compilações manuais `docker build` são seguidas por um envio logístico (Push Registry) a centralizadoras como o Docker Hub. É a partir do registro publicado que os `docker-compose.yml` da pasta infra adquirem as builds para subir e instanciar aplicações instantaneamente na nuvem sem requerer node_modules ou gradle compilando fisicamente no host operacional.
+1. **Build e Push das Imagens**: As imagens deste projeto são hospedadas no **GitHub Packages (GHCR)** sob a organização `projeto-de-extensao-grupo-06`. 
+   - Exemplo: `ghcr.io/projeto-de-extensao-grupo-06/springboot-web-backend:latest`.
+   - Para que os scripts de setup e composes funcionem, é obrigatório possuir as chaves `GITHUB_USERNAME` e `GITHUB_ACCESS_TOKEN` (com permissão de `read:packages`) configuradas no seu arquivo `.env`.
 2. **Setup de Variáveis (`.env`)**: A infraestrutura pulverizada obriga o host operacional a prover os atributos declarados em cada bloco `environment:` dos arquivos localmente por meio de `.env` que, repete-se como regra, nunca devem ser versionados via Git.

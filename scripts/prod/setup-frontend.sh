@@ -36,6 +36,12 @@ sudo su - "$TARGET_USER" -c "
   echo 'Aguardando Docker daemon...'
   while ! docker info >/dev/null 2>&1; do sleep 2; done
 
+  # Login no GitHub Packages antes de dar pull
+  if [ -f .env ]; then
+    export $(grep -v '^#' .env | xargs)
+    echo "$GITHUB_ACCESS_TOKEN" | docker login ghcr.io -u "$GITHUB_USERNAME" --password-stdin
+  fi
+
   cd services/frontend/institucional-website
   docker compose pull
   docker compose --env-file ../../../.env up -d

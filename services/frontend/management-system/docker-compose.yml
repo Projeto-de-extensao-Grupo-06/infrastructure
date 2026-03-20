@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   management-system:
-    image: raniersptech/management-system:latest
+    image: ghcr.io/projeto-de-extensao-grupo-06/management-system:latest
     container_name: management-system
     ports:
       - "${PORT_MANAGEMENT_SYSTEM:-8080}:3000"

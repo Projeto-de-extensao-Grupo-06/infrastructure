@@ -4,6 +4,8 @@
 # Script para levantar todo o ambiente localmente na ordem correta
 
 cd "$(dirname "$0")/.."
+set -a; source .env; set +a
+echo "$GITHUB_ACCESS_TOKEN" | docker login ghcr.io -u "$GITHUB_USERNAME" --password-stdin
 
 echo -e "\e[36mInicializando a base da infraestrutura (Redes e Bancos)...\e[0m"
 cd services/db

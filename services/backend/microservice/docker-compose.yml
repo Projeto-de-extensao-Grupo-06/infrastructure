@@ -14,7 +14,7 @@ services:
       - solarize_network
 
   microservice-app:
-    build: ../../../../schedule-notification
+    image: ghcr.io/projeto-de-extensao-grupo-06/schedule-notification:latest
     container_name: schedule-notification
     ports:
       - "${PORT_BACKEND_MICROSERVICE:-8082}:8080"

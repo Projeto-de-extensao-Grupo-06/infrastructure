@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   backend-service:
-    image: raniersptech/springboot-web-backend:latest
+    image: ghcr.io/projeto-de-extensao-grupo-06/springboot-web-backend:latest
     platform: linux/amd64
     container_name: backend-service
     environment:
