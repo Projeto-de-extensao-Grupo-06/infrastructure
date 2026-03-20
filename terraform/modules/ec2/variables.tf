@@ -48,3 +48,9 @@ variable "user_data" {
   type        = string
   default     = ""
 }
+
+variable "allowed_cidr_blocks" {
+  description = "Lista de CIDRs permitidos para as portas de entrada"
+  type        = list(string)
+  default     = ["0.0.0.0/0"]
+}

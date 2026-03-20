@@ -17,8 +17,9 @@ module "ec2_qa" {
   vpc_id        = module.vpc.vpc_id
   subnet_id     = module.vpc.public_subnet_ids[0]
   
-  frontend_ports = [22, 80, 443, 8000, 8080, 8081, 8082, 5678, 3000, 3306, 3307]
-  user_data      = file("../../../scripts/setup-qa.sh")
+  frontend_ports      = [22, 80, 443, 8000, 8080, 8081, 8082, 5678, 3000, 3306, 3307]
+  allowed_cidr_blocks = ["0.0.0.0/0"]
+  user_data           = file("../../../scripts/setup-qa.sh")
 }
 
 module "s3_bronze" {
