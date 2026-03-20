@@ -44,5 +44,5 @@ resource "aws_instance" "this" {
     Environment = var.environment
   }
 
-  user_data = file("../../scripts/setup.sh")
+  user_data = var.user_data != "" ? var.user_data : null
 }

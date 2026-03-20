@@ -42,3 +42,9 @@ variable "frontend_ports" {
   type        = list(number)
   default     = [22, 80, 443, 8000, 8080, 8081]
 }
+
+variable "user_data" {
+  description = "Script de inicializacao (User Data)"
+  type        = string
+  default     = ""
+}

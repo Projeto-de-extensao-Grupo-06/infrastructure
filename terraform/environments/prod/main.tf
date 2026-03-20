@@ -36,6 +36,7 @@ module "ec2_nginx" {
   vpc_id         = module.vpc_prod.vpc_id
   subnet_id      = module.vpc_prod.public_subnet_ids[0]
   frontend_ports = [22, 80, 443]
+  user_data      = file("../../../scripts/prod/setup-proxy.sh")
 }
 
 module "ec2_frontend_1" {
@@ -47,6 +48,7 @@ module "ec2_frontend_1" {
   vpc_id         = module.vpc_prod.vpc_id
   subnet_id      = module.vpc_prod.private_subnet_ids[0]
   frontend_ports = [22, 3000, 8080, 8081]
+  user_data      = file("../../../scripts/prod/setup-frontend.sh")
 }
 
 module "ec2_frontend_2" {
@@ -58,6 +60,7 @@ module "ec2_frontend_2" {
   vpc_id         = module.vpc_prod.vpc_id
   subnet_id      = module.vpc_prod.private_subnet_ids[0]
   frontend_ports = [22, 3000, 8080, 8081]
+  user_data      = file("../../../scripts/prod/setup-frontend.sh")
 }
 
 module "ec2_backend_1" {
@@ -69,6 +72,7 @@ module "ec2_backend_1" {
   vpc_id         = module.vpc_prod.vpc_id
   subnet_id      = module.vpc_prod.private_subnet_ids[1]
   frontend_ports = [22, 8000]
+  user_data      = file("../../../scripts/prod/setup-backend.sh")
 }
 
 module "ec2_backend_2" {
@@ -80,6 +84,7 @@ module "ec2_backend_2" {
   vpc_id         = module.vpc_prod.vpc_id
   subnet_id      = module.vpc_prod.private_subnet_ids[1]
   frontend_ports = [22, 8000]
+  user_data      = file("../../../scripts/prod/setup-backend.sh")
 }
 
 module "ec2_chatbot" {
@@ -91,6 +96,7 @@ module "ec2_chatbot" {
   vpc_id         = module.vpc_prod.vpc_id
   subnet_id      = module.vpc_prod.private_subnet_ids[2]
   frontend_ports = [22, 3000, 5678]
+  user_data      = file("../../../scripts/prod/setup-bot.sh")
 }
 
 module "ec2_webscraping" {
@@ -102,6 +108,7 @@ module "ec2_webscraping" {
   vpc_id         = module.vpc_prod.vpc_id
   subnet_id      = module.vpc_prod.private_subnet_ids[2]
   frontend_ports = [22, 5000]
+  user_data      = file("../../../scripts/prod/setup-bot.sh")
 }
 
 module "ec2_db" {
@@ -113,6 +120,7 @@ module "ec2_db" {
   vpc_id         = module.vpc_prod.vpc_id
   subnet_id      = module.vpc_prod.private_subnet_ids[3]
   frontend_ports = [22, 3306, 6379]
+  user_data      = file("../../../scripts/prod/setup-db.sh")
 }
 
 module "s3_raw" {
