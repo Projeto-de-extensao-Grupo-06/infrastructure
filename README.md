@@ -92,7 +92,35 @@ No repertório **`terraform/`**, residem os scripts padronizados focados em aloc
 - **Ambiente QA (`environments/qa`)**: (Anteriormente `dev`). VPC desenhada em Single-AZ. Consolida todos os serviços em uma única VM (`t3.large`) para testes rápidos. Provisiona as três fases do Data Lake: `bronze`, `silver` e `gold`.
 - **Ambiente PROD (`environments/prod`)**: Topologia de Alta Disponibilidade. Provisiona Sub-redes Públicas (Proxy) e Privadas, isolando rigidamente Frontend, Backend, Automations e Datastore Persistence.
 
-Todo provisionamento ocorre através do CLI ou do script: `.\scripts\deploy\deploy-qa.ps1`.
+## Deploy Automatizado (QA)
+
+Para o ambiente de QA, o processo foi totalmente automatizado via Terraform. O script principal agora realiza todo o ciclo de vida:
+
+1. **Provisionamento**: Cria a instância EC2 e a rede.
+2. **Transferência de Código (SCP)**: O Terraform utiliza um provisionador `file` para enviar automaticamente a pasta `services/` e o seu `.env` para a VM.
+3. **Setup Remoto**: Após o envio, o Terraform executa o script de inicialização (`scripts/setup/setup-qa.sh`) e sobe os contêineres Docker na ordem correta.
+
+**Como rodar o deploy:**
+```powershell
+.\scripts\deploy\deploy-qa.ps1
+```
+
+> [!NOTE]
+> **Tempo Estimado**: O processo completo (provisionamento + transferência + inicialização) em QA demora aproximadamente **7 minutos**.
+
+---
+
+## Configuração do Data Lake (S3)
+
+As aplicações que consomem o Data Lake utilizam a variável `BUCKET_NAME` no arquivo `.env`. Para o ambiente de QA/Homologação, utilize a camada **Trusted**:
+
+- **BUCKET_NAME**: `solarway-datalake-silver`
+
+Certifique-se de preencher as seguintes variáveis no seu `.env` antes do deploy:
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
+- `AWS_SESSION_TOKEN`
+- `BUCKET_NAME=solarway-datalake-silver`
 
 ---
 
@@ -101,5 +129,17 @@ Todo provisionamento ocorre através do CLI ou do script: `.\scripts\deploy\depl
 1. **Build e Push das Imagens**: As imagens deste projeto são hospedadas no **GitHub Packages (GHCR)** sob a organização `projeto-de-extensao-grupo-06`. 
    - Exemplo: `ghcr.io/projeto-de-extensao-grupo-06/springboot-web-backend:latest`.
    - Para que os scripts de setup e composes funcionem, é obrigatório possuir as chaves `GITHUB_USERNAME` e `GITHUB_ACCESS_TOKEN` (com permissão de `read:packages`) configuradas no seu arquivo `.env`.
+   - **Nota**: O script de deploy realiza o `docker login` automaticamente no servidor usando essas credenciais.
 2. **Setup de Variáveis (`.env`)**: A infraestrutura pulverizada obriga o host operacional a prover os atributos declarados em cada bloco `environment:` dos arquivos localmente por meio de `.env`. 
    - **Importante (AWS)**: Para operações de infraestrutura (Terraform), as credenciais devem ser configuradas via `aws configure` e não pelo `.env`. Consulte a [documentação do Terraform](./terraform/README.md) para detalhes.
+
+## Chaves de Acesso SSH (.pem)
+
+Para que o Terraform consiga realizar o deploy automatizado (provisionamento via SCP e execução remota), é obrigatório possuir uma chave privada no formato .pem na sua conta AWS.
+
+1. **Criação**: No console da AWS Academy / Learner Lab, crie uma chave (Key Pair) do tipo RSA e formato .pem.
+2. **Nome da Chave**: O nome da chave deve ser **solarway**.
+3. **Localização**: Salve o arquivo baixado (solarway.pem) na raiz deste repositório. O Terraform e os scripts de deploy estão configurados para buscar a chave neste local.
+
+> [!IMPORTANT]
+> Cada membro da equipe deve criar sua própria chave no seu ambiente de teste AWS e garantir que o arquivo solarway.pem esteja presente localmente antes de rodar o deploy-qa.ps1.
