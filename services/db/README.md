@@ -26,7 +26,11 @@ A justificativa técnica para isso é que este `docker-compose.yml` expõe e cri
 
 3. Verifique o status (healthcheck) dos serviços através do comando `docker-compose ps`.
 
-Após a validação de integridade do MySQL e Redis, o ambiente estará apto para a execução do diretório **`services/backend/monolith`**.
+## Gestão de Imagens (GitHub Packages)
+
+Para garantir o pull das imagens (MySQL/Redis) em ambientes de produção e QA usando a infraestrutura unificada:
+1. **Login**: `echo $GITHUB_ACCESS_TOKEN | docker login ghcr.io -u $GITHUB_USERNAME --password-stdin`
+2. **Pull**: `docker-compose pull`
 
 ---
 

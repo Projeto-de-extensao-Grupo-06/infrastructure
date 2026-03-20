@@ -17,14 +17,21 @@ As seguintes variáveis de ambiente essenciais estão declaradas no `docker-comp
 - `BACKEND_API_URL`: Mapeada como `http://backend-service:8000`. Graças ao DNS nativo da engine interligada na `solarize_network`, o n8n se comunica com o Spring Boot pelo nome direto do contêiner, reduzindo o uso obsoleto do localhost do host limitante.
 - `BOT_SECRET`: Chave criptográfica simétrica para autenticação nos endpoints da API central.
 
-## Como Fazer Build / Atualizar Imagens
+## Como Atualizar Imagens (GitHub Packages)
 
-Diferente dos módulos de *Backend* e *Frontend*, a infraestrutura do Bot **não exige** a compilação de imagens customizadas do seu código fonte local. Este módulo é orquestrado de forma standalone, através do download de imagens Docker pré-construídas e mantidas oficialmente pelas ferramentas:
-- `devlikeapro/waha:latest`
-- `n8nio/n8n:latest`
-- `redis:latest`
+Embora este módulo utilize imagens oficiais, a infraestrutura segue a estratégia de registro centralizada da organização:
 
-Portanto, você não precisa fazer *build* ou *push* de imagens próprias para rodar o Bot.
+1. **Autenticação**:
+   Certifique-se de estar logado no GHCR para garantir pulls sem rate-limit e acesso a pacotes privados:
+   ```bash
+   echo $GITHUB_ACCESS_TOKEN | docker login ghcr.io -u $GITHUB_USERNAME --password-stdin
+   ```
+
+2. **Imagens Utilizadas**:
+   As imagens são baixadas automaticamente via `docker-compose pull` ou `up`:
+   - `devlikeapro/waha:latest`
+   - `n8nio/n8n:latest`
+   - `redis:latest`
 
 ---
 

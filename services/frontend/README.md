@@ -9,18 +9,25 @@ Este diretório separa e isola a orquestração do cliente gráfico, dividindo o
 
 ---
 
-## Requisitos de Build das Imagens UI
+## Requisitos de Build das Imagens UI (GitHub Packages)
 
-Ao invés de carregar diretórios fontes inteiros e NodeModules nos ambientes de nuvem, esses composes puxam diretamente as imagens de frontends previamente cacheadas e montadas (ex: `raniersptech/management-system`).
+Os frontends utilizam imagens hospedadas no **GHCR** para deploy rápido.
 
-Para alimentar sua infraestrutura atualizada de Frontend aqui:
-
-1. Vá até o repositório de código fonte do frontend respectivo (ex: `management-system/`);
-2. Verifique se as variáveis locais nas fases de build estão devidamente configuradas;
-3. Builde de forma nativa e impulsione para registry:
+1. **Autenticação**:
    ```bash
-   docker build -t raniersptech/management-system:latest .
-   docker push raniersptech/management-system:latest
+   echo $GITHUB_ACCESS_TOKEN | docker login ghcr.io -u $GITHUB_USERNAME --password-stdin
+   ```
+
+2. **Build e Tag**:
+   Vá até o repositório UI correspondente e execute:
+   ```bash
+   docker build -t ghcr.io/projeto-de-extensao-grupo-06/management-system:latest .
+   # Repita para o institucional-website alterando a tag
+   ```
+
+3. **Push**:
+   ```bash
+   docker push ghcr.io/projeto-de-extensao-grupo-06/management-system:latest
    ```
 
 ---

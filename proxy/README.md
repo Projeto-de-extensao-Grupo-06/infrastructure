@@ -9,6 +9,15 @@ A stack utiliza:
 
 ---
 
+## Gestão de Imagens (GitHub Packages)
+
+A infraestrutura do Proxy, embora baseada em Nginx oficial, segue o padrão de autenticação da organização para garantir pull de imagens em ambiente de nuvem:
+
+1. **Login**: `echo $GITHUB_ACCESS_TOKEN | docker login ghcr.io -u $GITHUB_USERNAME --password-stdin`
+2. **Pull**: `docker-compose pull`
+
+---
+
 ## IMPORTANT: Restrições de Inicialização
 
 A execução do comando `docker-compose up -d` de forma isolada nesta stack falhará se for a primeira inicialização ou se a execução ocorrer em ambiente local (localhost).

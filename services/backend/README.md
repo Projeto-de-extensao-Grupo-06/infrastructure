@@ -9,18 +9,25 @@ Este diretório contém a infraestrutura essencial para os serviços de processa
 
 ---
 
-## Como Fazer Build / Atualizar Imagens
+## Como Fazer Build / Atualizar Imagens (GitHub Packages)
 
-Para que a camada `monolith` deste compose funcione perfeitamente com a última versão do seu script, deve-se gerar a imagem e enviá-la para o respectivo *Container Registry* (como constar no `docker-compose.yml`).
+As imagens deste serviço são hospedadas no **GitHub Container Registry (GHCR)**.
 
-1. Acesse o repositório de código fonte do backend raiz (ex: `/springboot-web-backend`);
-2. Forme e empacote a nova imagem da API:
+1. **Autenticação**:
+   Antes de qualquer operação, realize o login no registro da organização:
    ```bash
-   docker build -t raniersptech/springboot-web-backend:latest .
+   echo $GITHUB_ACCESS_TOKEN | docker login ghcr.io -u $GITHUB_USERNAME --password-stdin
    ```
-3. Realize o upload da imagem versionada:
+
+2. **Build e Tag**:
+   Acesse o repositório de código fonte do backend e execute:
    ```bash
-   docker push raniersptech/springboot-web-backend:latest
+   docker build -t ghcr.io/projeto-de-extensao-grupo-06/springboot-web-backend:latest .
+   ```
+
+3. **Push**:
+   ```bash
+   docker push ghcr.io/projeto-de-extensao-grupo-06/springboot-web-backend:latest
    ```
 
 *(Nota: no caso de microserviços que declarem a propriedade `build: .` em seu manifesto interno, o próprio sub-diretório de infra já agirá como construtor caso os artefatos de build sejam dispostos).*
