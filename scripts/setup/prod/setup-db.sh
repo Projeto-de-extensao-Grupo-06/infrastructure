@@ -11,19 +11,7 @@ if [ "$EUID" -eq 0 ]; then
     export DEBIAN_FRONTEND=noninteractive
 fi
 
-echo "➡️ [PROD-DB] Atualizando S.O..."
-sudo apt-get update && sudo apt-get install -y ca-certificates curl gnupg lsb-release git
-
-echo "➡️ [PROD-DB] Instalando Docker..."
-curl -fsSL https://get.docker.com -o get-docker.sh
-sudo sh get-docker.sh && sudo apt-get install -y docker-compose-plugin || true
-sudo systemctl enable docker && sudo systemctl start docker
-
-TARGET_USER=${SUDO_USER:-ubuntu}
-if ! id "$TARGET_USER" &>/dev/null; then TARGET_USER="root"; fi
-sudo usermod -aG docker "$TARGET_USER" || true
-
-echo "➡️ [PROD-DB] Configurando Infraestrutura da Base de Dados..."
+echo "➡️ [PROD-DB] Configurando Código..."
 sudo su - "$TARGET_USER" -c "
   cd ~
   if [ ! -d 'docker-composes' ]; then

@@ -1,32 +1,39 @@
 #!/bin/bash
-# TODO - Testar budega de script
 # ==============================================================================
 # Ambiente: QA
-# Objetivo: Provisionar uma instância EC2 única rodando o ambiente completo.
-# Execuçao Automática: AWS EC2 User Data
+# Objetivo: Provisionar e iniciar o ambiente via Docker Compose.
 # ==============================================================================
 set -e
 
-# Configura logs do User Data
-if [ "$EUID" -eq 0 ]; then
-    exec > >(tee /var/log/user-data-setup-qa.log|logger -t user-data -s 2>/dev/console) 2>&1
-    export DEBIAN_FRONTEND=noninteractive
+# Se estiver no /tmp, garante permissão de execução (caso precise ser chamado via Terraform)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+echo "➡️ [QA] Iniciando provisionamento do ambiente..."
+
+# O setup-vm.sh deve ter sido executado previamente ou ser chamado aqui
+if [ -f "$SCRIPT_DIR/setup-vm.sh" ]; then
+    bash "$SCRIPT_DIR/setup-vm.sh"
 fi
 
-echo "➡️ [QA] Atualizando e instalando pré-requisitos..."
-sudo apt-get update
-sudo apt-get install -y ca-certificates curl gnupg lsb-release git
+echo "➡️ [QA] Configurando deploy..."
+cd "$SCRIPT_DIR/.." # Sobe para a pasta docker-composes
 
-echo "➡️ [Solarway-QA] Instalando Docker Engine..."
-curl -fsSL https://get.docker.com -o get-docker.sh
-sudo sh get-docker.sh
-sudo apt-get install -y docker-compose-plugin || true
+# Aguarda Docker
+while ! sudo docker info >/dev/null 2>&1; do echo "Aguardando Docker..."; sleep 2; done
 
-sudo systemctl enable docker
-sudo systemctl start docker
+# Login no GHCR se as credenciais estiverem no .env
+if [ -f .env ]; then
+    export GITHUB_USERNAME=$(grep GITHUB_USERNAME .env | cut -d'=' -f2 | tr -d '\r')
+    export GITHUB_ACCESS_TOKEN=$(grep GITHUB_ACCESS_TOKEN .env | cut -d'=' -f2 | tr -d '\r')
+    echo "$GITHUB_ACCESS_TOKEN" | sudo docker login ghcr.io -u "$GITHUB_USERNAME" --password-stdin
+fi
 
-TARGET_USER=${SUDO_USER:-ubuntu}
-if ! id "$TARGET_USER" &>/dev/null; then TARGET_USER="root"; fi
-sudo usermod -aG docker "$TARGET_USER" || true
+echo "🐳 [QA] Subindo pilha de serviços..."
+# Nota: Ajustado para subir tudo em ordem
+cd services/db && sudo docker compose --env-file ../../.env up -d
+sleep 5
+cd ../backend/monolith && sudo docker compose --env-file ../../../.env up -d
+cd ../../frontend/management-system && sudo docker compose --env-file ../../../.env up -d
+cd ../institucional-website && sudo docker compose --env-file ../../../.env up -d
 
-echo "✅ [Solarway-QA] Docker instalado. Use o script de deploy local para subir os containers."
+echo "✅ [QA] Ambiente provisionado com sucesso!"

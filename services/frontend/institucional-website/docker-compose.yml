@@ -1,11 +1,11 @@
-version: "3.8"
-
 services:
   institutional-website:
     image: ghcr.io/projeto-de-extensao-grupo-06/institutional-website:latest
     container_name: institutional-website
     ports:
-      - "${PORT_INSTITUTIONAL_WEBSITE:-8081}:3000"
+      - "${PORT_INSTITUTIONAL_WEBSITE:-8081}:80"
+    environment:
+      - BACKEND_URL=${BACKEND_URL:-http://backend-service:8000}
     networks:
       - solarway_network
 

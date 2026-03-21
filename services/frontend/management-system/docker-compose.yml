@@ -1,11 +1,11 @@
-version: "3.8"
-
 services:
   management-system:
     image: ghcr.io/projeto-de-extensao-grupo-06/management-system:latest
     container_name: management-system
     ports:
-      - "${PORT_MANAGEMENT_SYSTEM:-8080}:3000"
+      - "${PORT_MANAGEMENT_SYSTEM:-8080}:80"
+    environment:
+      - BACKEND_URL=${BACKEND_URL:-http://backend-service:8000}
     networks:
       - solarway_network
 

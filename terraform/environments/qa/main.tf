@@ -20,7 +20,7 @@ module "ec2_qa" {
   
   frontend_ports      = [22, 80, 443, 8000, 8080, 8081, 8082, 5678, 3000, 3306, 3307]
   allowed_cidr_blocks = ["0.0.0.0/0"]
-  user_data           = file("../../../scripts/setup/setup-qa.sh")
+  user_data           = "#!/bin/bash\necho 'User Data minimal - o setup real sera via remote-exec'"
 }
 
 output "public_ip" {
@@ -34,10 +34,12 @@ output "ssh_command" {
 }
 
 resource "null_resource" "deploy" {
-  # Dispara o deploy sempre que mudar a instância ou o .env local
+
   triggers = {
     instance_id = module.ec2_qa.instance_id
     env_hash    = filemd5("../../../.env")
+    setup_vm    = filemd5("../../../scripts/setup/setup-vm.sh")
+    setup_qa    = filemd5("../../../scripts/setup/setup-qa.sh")
   }
 
   connection {
@@ -50,8 +52,19 @@ resource "null_resource" "deploy" {
   # Preparar pasta remota
   provisioner "remote-exec" {
     inline = [
-      "mkdir -p /tmp/solarway"
+      "mkdir -p /tmp/solarway/scripts/setup"
     ]
+  }
+
+  # Enviar scripts de setup
+  provisioner "file" {
+    source      = "../../../scripts/setup/setup-vm.sh"
+    destination = "/tmp/solarway/scripts/setup/setup-vm.sh"
+  }
+
+  provisioner "file" {
+    source      = "../../../scripts/setup/setup-qa.sh"
+    destination = "/tmp/solarway/scripts/setup/setup-qa.sh"
   }
 
   # Enviar .env e pasta de serviços
@@ -65,27 +78,15 @@ resource "null_resource" "deploy" {
     destination = "/tmp/solarway/services"
   }
 
-  # Subir containers (com wait loop robusto para Docker)
+  # Executar o setup via scripts transferidos
   provisioner "remote-exec" {
     inline = [
       "cd /tmp/solarway",
       "echo '➡️ Ajustando URLs no .env para o IP Público: ${module.ec2_qa.public_ip}...'",
       "sed -i 's/localhost:8000/${module.ec2_qa.public_ip}:8000/g' .env",
-      "echo '➡️ Aguardando o Docker ser instalado e iniciado (User Data)...'",
-      "while ! sudo docker version >/dev/null 2>&1; do sleep 5; done",
-      "echo '🔐 Autenticando no GHCR...'",
-      "export GITHUB_USERNAME=$(grep GITHUB_USERNAME .env | cut -d'=' -f2 | tr -d '\r')",
-      "export GITHUB_ACCESS_TOKEN=$(grep GITHUB_ACCESS_TOKEN .env | cut -d'=' -f2 | tr -d '\r')",
-      "echo $GITHUB_ACCESS_TOKEN | sudo docker login ghcr.io -u $GITHUB_USERNAME --password-stdin",
-      "echo '🐳 Docker pronto e autenticado! Iniciando Containers...'",
-      "cd services/db && sudo docker compose --env-file ../../.env up -d",
-      "sleep 5",
-      "cd ../backend/monolith && sudo docker compose --env-file ../../../.env up -d",
-      "cd ../microservice && sudo docker compose --env-file ../../../.env up -d",
-      "cd ../../frontend/management-system && sudo docker compose --env-file ../../../.env up -d",
-      "cd ../institucional-website && sudo docker compose --env-file ../../../.env up -d",
-      "cd ../../bot && sudo docker compose --env-file ../../.env up -d",
-      "echo '✅ Deploy Solarway via /tmp finalizado!'"
+      "echo '➡️ Iniciando setup da VM e deploy do ambiente...'",
+      "chmod +x scripts/setup/setup-vm.sh scripts/setup/setup-qa.sh",
+      "sudo bash scripts/setup/setup-qa.sh"
     ]
   }
 }

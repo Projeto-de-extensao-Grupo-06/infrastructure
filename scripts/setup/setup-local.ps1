@@ -1,7 +1,7 @@
 # setup-local.ps1
 # Script para levantar todo o ambiente localmente na ordem correta
 
-Set-Location "$PSScriptRoot\.."
+Set-Location "$PSScriptRoot\..\.."
 
 # Load GitHub Credentials from .env
 Get-Content .env | Foreach-Object {
