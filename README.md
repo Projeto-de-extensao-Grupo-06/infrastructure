@@ -73,15 +73,63 @@ Para garantir conectividade direta e resolução de DNS interna nativa (abandona
 **Resolução por Nomes**: Em decorrência do alinhamento, os serviços dentro da *solarway_network* atingem uns aos outros pelo `container_name`. Por exemplo, o N8N conecta-se ao servidor Spring pela URL dinâmica: `http://backend-service:8000`.
 ---
 
-## Proxy e Segurança (Load Balancer SSL)
+## Proxy Reverso Central (Nginx)
 
-Para processar comunicações TLS/SSL e atuar como Gateway HTTP/HTTPS centralizado do produto, o diretório **`proxy/`** oferece um contêiner Nginx roteado com Certbot (Let's Encrypt).
+O diretório `services/proxy/` contém o **ponto de entrada único** da aplicação, simulando localmente o que a EC2 pública (`ec2_nginx`) faz na AWS.
 
-- **Estratégia Nuvem**: O proxy requer leitura física de certificados. Em domínios remotos cloud, nunca inicie direto pelo `docker-compose up -d`. Ao invés disso, execute o utilitário embarcado `./init-letsencrypt.sh`, após pré-configurar os domínios no `config/app.conf`. 
-- **Homologação Local**: Para debug de rotas via localhost, emita certificados autoassinados (self-signed key e crt) descartáveis e altere as chaves de rede (`hosts` OS) apontando ao local.
+### Arquitetura do Proxy
+
+```
+                    ┌─────────────────────────────┐
+Internet ──────────►│  nginx-proxy (ec2_nginx)     │
+                    │  Porta 80  → Management      │
+                    │  Porta 81  → Institucional   │
+                    └──────┬──────────────┬────────┘
+                           │              │
+              ┌────────────▼──┐     ┌─────▼─────────────┐
+              │ management-   │     │ institutional-     │
+              │ system:80     │     │ website:80         │
+              │ (Nginx próprio)│    │ (Nginx próprio)    │
+              │  ├── / assets  │    │  ├── / assets      │
+              │  └── /api/ ──►│    │  └── /api/ ────►   │
+              └───────────────┘    └────────────────────┘
+                        │                    │
+                        └─────────►  backend-service:8000
+```
+
+**Responsabilidades:**
+- **Proxy central** (`nginx.conf`): Roteador puro — apenas encaminha o tráfego para o container correto. Não duplica lógica de `/api/`.
+- **Nginx de cada frontend** (`nginx.conf.template`): Serve os assets React e proxia `/api/` para o backend via `BACKEND_URL`.
+
+### Acesso Local
+
+| URL | Destino |
+|-----|---------|
+| `http://localhost/` | Management System |
+| `http://localhost:81/` | Institucional Website |
+| `http://localhost/health` | Healthcheck do proxy |
+
+### Produção AWS
+
+Na AWS, o `ec2_nginx` na subnet pública roteia para IPs privados da VPC:
+- `:8080` → VM `frontend-1` (management) — IP privado `10.0.2.x`
+- `:8081` → VM `frontend-2` (institucional) — IP privado `10.0.2.x`
+
+O `nginx.conf.template` usa `envsubst` para injetar os IPs reais via variáveis de ambiente providas pelo Terraform.
+
+### Roadmap HTTPS (Let's Encrypt)
+
+> [!NOTE]
+> HTTPS será habilitado após validação do deploy em HTTP na AWS. Requer domínio registrado.
+
+**Fluxo planejado:**
+1. **Porto :80** no `ec2_nginx` → redirect 301 → `:443`
+2. **Porto :443** → SSL termination com certificado Let's Encrypt via Certbot
+3. `setup-proxy.sh` rodará `certbot certonly --standalone` automaticamente
+4. Variáveis `DOMAIN` e `ADMIN_EMAIL` serão adicionadas ao `.env`
 
 > [!WARNING]
-> **Status do Proxy**: O componente de Proxy reverso está em fase de estruturação inicial. Atualmente, ele está **incompleto** e os testes de roteamento e SSL ainda não foram aplicados/validados para o ambiente de nuvem.
+> **Status atual**: Deploy HTTP local ✅ validado. Deploy HTTPS em AWS 🔲 pendente de domínio registrado.
 
 ---
 

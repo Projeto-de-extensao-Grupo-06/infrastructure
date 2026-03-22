@@ -4,46 +4,54 @@ Este diretório separa e isola a orquestração do cliente gráfico, dividindo o
 
 ## Estrutura Atual
 
-- **`institucional-website/`**: Manifesto responsável por empacotar e disponibilizar o Web App de Landpage / Apresentação.
-- **`management-system/`**: Manifesto direcionado a prover o Painel Administrativo do sistema, requerendo conectividade direta de consumo por APIs ao Backend para autenticação e gestão de dados sensíveis.
+- **`management-system/`**: Sistema gerencial privado (painel de controle). Requer autenticação e acesso contínuo à API do backend.
+- **`institucional-website/`**: Site institucional de apresentação da Solarway.
 
 ---
 
-## Requisitos de Build das Imagens UI (GitHub Packages)
+## Arquitetura de Proxy
 
-Os frontends utilizam imagens hospedadas no **GHCR** para deploy rápido.
+Cada container de frontend **já possui seu próprio Nginx interno** (`nginx.conf.template`) que:
+1. Serve os arquivos estáticos do React (`location /`)
+2. Proxia chamadas de API para o backend (`location /api/ → ${BACKEND_URL}`)
 
-1. **Autenticação**:
-   ```bash
-   echo $GITHUB_ACCESS_TOKEN | docker login ghcr.io -u $GITHUB_USERNAME --password-stdin
-   ```
+Esses containers são acessados **indiretamente** através do proxy central (`services/proxy/`), que atua como ponto de entrada único.
 
-2. **Build e Tag**:
-   Vá até o repositório UI correspondente e execute:
-   ```bash
-   docker build -t ghcr.io/projeto-de-extensao-grupo-06/management-system:latest .
-   # Repita para o institucional-website alterando a tag
-   ```
+```
+Browser
+  ├── localhost:80  → nginx-proxy → management-system:80 → /api/ → backend-service:8000
+  └── localhost:81  → nginx-proxy → institutional-website:80 → /api/ → backend-service:8000
+```
 
-3. **Push**:
-   ```bash
-   docker push ghcr.io/projeto-de-extensao-grupo-06/management-system:latest
-   ```
+> [!NOTE]
+> Em produção (AWS), o `nginx-proxy` (ec2_nginx) roteia para os IPs privados de cada VM de frontend.
+> `BACKEND_URL` nos containers dos frontends aponta para o IP privado da VM do backend.
 
 ---
 
-## Instanciação de Containers e Serviços
+## Requisitos de Build das Imagens (GitHub Packages)
 
-Uma vez que as imagens estejam sincronizadas (seja recém publicadas após build, ou baixadas pelo servidor):
+As imagens são hospedadas no **GHCR** sob `ghcr.io/projeto-de-extensao-grupo-06/`.
 
-1. Acesse o domínio interno desejado;
-2. Instancie o provisionamento de forma destacada (em detached mode):
-   ```bash
-   cd management-system
-   docker-compose up -d
-   ```
-*(O mesmo princípio aplica-se ao `institucional-website`).*
+```bash
+# Autenticação
+echo $GITHUB_ACCESS_TOKEN | docker login ghcr.io -u $GITHUB_USERNAME --password-stdin
 
-A infraestrutura definirá as portas mapeadas (ex: porta `8080`, ou `8081` do host para o `3000` do client interno), ligando-os na rede trans-arquitetural referenciada como `solarway_network`.
+# Build e push (exemplo management-system)
+docker build -t ghcr.io/projeto-de-extensao-grupo-06/management-system:latest .
+docker push ghcr.io/projeto-de-extensao-grupo-06/management-system:latest
+```
 
-> **⚠️ Atenção a Integração**: Os frontends orquestrados através desses containers buscam chamadas HTTP para o Backend atráves do DNS interno (ex: apontamentos diretos usando o proxy local ou o IP público, dependendo da variável de ambiente setada na pipeline React). Para chamadas Server-Side, garanta a dependência contínua aos construtores da `solarway_network`.
+---
+
+## Variáveis de Ambiente
+
+| Variável | Descrição | Padrão local |
+|----------|-----------|-------------|
+| `BACKEND_URL` | URL do backend para o Nginx interno | `http://backend-service:8000` |
+| `PORT_MANAGEMENT_SYSTEM` | Porta exposta do management system | `8080` |
+| `PORT_INSTITUCIONAL_WEBSITE` | Porta exposta do site institucional | `8081` |
+
+> [!IMPORTANT]
+> Em produção, `BACKEND_URL` deve apontar para o **IP privado** da VM do backend na VPC, ex: `http://10.0.3.x:8000`.
+

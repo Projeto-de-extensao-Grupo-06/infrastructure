@@ -1,6 +1,5 @@
 #!/bin/bash
 # setup-local.sh
-# TODO - Testar budega de script
 # Script para levantar todo o ambiente localmente na ordem correta
 
 cd "$(dirname "$0")/.."
@@ -31,6 +30,13 @@ echo -e "\e[36mInicializando o Serviço de Bot...\e[0m"
 cd ../../bot
 docker compose --env-file ../../.env up -d
 
+echo -e "\e[36mInicializando o Nginx Proxy (entry point local)...\e[0m"
+cd ../proxy
+docker compose --env-file ../../.env up -d
+
 cd ../../
 echo -e "\e[32mDeploy de todos os componentes locais finalizado!\e[0m"
+echo -e "\e[32m  ➡️  Acesse: http://localhost/ui/management\e[0m"
+echo -e "\e[32m  ➡️  Acesse: http://localhost/ui/institucional\e[0m"
+echo -e "\e[32m  ➡️  API:    http://localhost/api\e[0m"
 docker ps

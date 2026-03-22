@@ -40,6 +40,13 @@ Write-Host "Inicializando o Serviço de Bot..." -ForegroundColor Cyan
 Set-Location ../../bot
 docker-compose --env-file ../../.env up -d
 
+Write-Host "Inicializando o Nginx Proxy (entry point local)..." -ForegroundColor Cyan
+Set-Location ../proxy
+docker-compose --env-file ../../.env up -d
+
 Set-Location ../../
 Write-Host "Deploy de todos os componentes locais finalizado!" -ForegroundColor Green
-docker ps
+Write-Host "  ➡️  Management:    http://localhost/ui/management" -ForegroundColor Green
+Write-Host "  ➡️  Institucional: http://localhost/ui/institucional" -ForegroundColor Green
+Write-Host "  ➡️  API:           http://localhost/api" -ForegroundColor Green
+Write-Host "  ➡️  Healthcheck:   http://localhost/health" -ForegroundColor Green

@@ -35,6 +35,7 @@ module "ec2_nginx" {
   instance_type  = "t3.small"
   vpc_id         = module.vpc_prod.vpc_id
   subnet_id      = module.vpc_prod.public_subnet_ids[0]
+  key_name       = var.key_name
   frontend_ports = [22, 80, 443]
   user_data      = "${file("../../../scripts/setup/setup-vm.sh")}\n${file("../../../scripts/setup/prod/setup-proxy.sh")}"
 }
@@ -128,6 +129,92 @@ module "ec2_db" {
   frontend_ports = [22, 3306, 6379]
   allowed_cidr_blocks = ["10.0.0.0/16"]
   user_data      = "${file("../../../scripts/setup/setup-vm.sh")}\n${file("../../../scripts/setup/prod/setup-db.sh")}"
+}
+
+output "nginx_public_ip" {
+  description = "IP Público do Nginx Proxy"
+  value       = module.ec2_nginx.public_ip
+}
+
+output "nginx_ssh" {
+  description = "SSH para o Nginx"
+  value       = "ssh -i ${var.key_name}.pem ubuntu@${module.ec2_nginx.public_ip}"
+}
+
+output "backend_private_ip" {
+  description = "IP Privado do Backend Monolito (para o Nginx)"
+  value       = module.ec2_backend_1.private_ip
+}
+
+output "management_private_ip" {
+  description = "IP Privado do Frontend Management System (para o Nginx)"
+  value       = module.ec2_frontend_2.private_ip
+}
+
+output "institucional_private_ip" {
+  description = "IP Privado do Frontend Institucional Website (para o Nginx)"
+  value       = module.ec2_frontend_1.private_ip
+}
+
+resource "null_resource" "nginx_deploy" {
+  triggers = {
+    nginx_id           = module.ec2_nginx.instance_id
+    backend_ip         = module.ec2_backend_1.private_ip
+    management_ip      = module.ec2_frontend_2.private_ip
+    institucional_ip   = module.ec2_frontend_1.private_ip
+    setup_proxy_hash   = filemd5("../../../scripts/setup/prod/setup-proxy.sh")
+    nginx_conf_hash    = filemd5("../../../services/proxy/nginx.conf.template")
+  }
+
+  connection {
+    type        = "ssh"
+    user        = "ubuntu"
+    private_key = file("${path.module}/../../../${var.key_name}.pem")
+    host        = module.ec2_nginx.public_ip
+  }
+
+  # Preparar estrutura no /tmp
+  provisioner "remote-exec" {
+    inline = [
+      "mkdir -p /tmp/solarway/services/proxy",
+      "mkdir -p /tmp/solarway/scripts/setup/prod"
+    ]
+  }
+
+  # Transferir arquivos do proxy
+  provisioner "file" {
+    source      = "../../../services/proxy/docker-compose.yml"
+    destination = "/tmp/solarway/services/proxy/docker-compose.yml"
+  }
+
+  provisioner "file" {
+    source      = "../../../services/proxy/nginx.conf.template"
+    destination = "/tmp/solarway/services/proxy/nginx.conf.template"
+  }
+
+  # Transferir scripts
+  provisioner "file" {
+    source      = "../../../scripts/setup/setup-vm.sh"
+    destination = "/tmp/solarway/scripts/setup/setup-vm.sh"
+  }
+
+  provisioner "file" {
+    source      = "../../../scripts/setup/prod/setup-proxy.sh"
+    destination = "/tmp/solarway/scripts/setup/prod/setup-proxy.sh"
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "echo 'BACKEND_PRIVATE_IP=${module.ec2_backend_1.private_ip}' >> /tmp/solarway/.env",
+      "echo 'MANAGEMENT_PRIVATE_IP=${module.ec2_frontend_2.private_ip}' >> /tmp/solarway/.env",
+      "echo 'INSTITUCIONAL_PRIVATE_IP=${module.ec2_frontend_1.private_ip}' >> /tmp/solarway/.env",
+      "chmod +x /tmp/solarway/scripts/setup/setup-vm.sh",
+      "chmod +x /tmp/solarway/scripts/setup/prod/setup-proxy.sh",
+      "sudo bash /tmp/solarway/scripts/setup/prod/setup-proxy.sh",
+      "echo '\u2705 Nginx Proxy configurado! Healthcheck: '",
+      "curl -sf http://localhost/health || echo 'Aguarde o container iniciar...'"
+    ]
+  }
 }
 
 module "s3_raw" {

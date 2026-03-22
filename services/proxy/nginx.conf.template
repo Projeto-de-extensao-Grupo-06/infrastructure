@@ -1,0 +1,73 @@
+# ==============================================================================
+# Solarway Nginx - Template PROD
+# Variáveis substituídas via envsubst no setup-proxy.sh:
+#   BACKEND_PRIVATE_IP, MANAGEMENT_PRIVATE_IP, INSTITUCIONAL_PRIVATE_IP
+# ==============================================================================
+
+events {
+    worker_connections 1024;
+}
+
+http {
+    include       /etc/nginx/mime.types;
+    default_type  application/octet-stream;
+    sendfile      on;
+    keepalive_timeout 65;
+
+    # ─── Upstream: IPs Privados da VPC AWS ────────────────────────────────────
+    upstream backend {
+        server ${BACKEND_PRIVATE_IP}:8000;
+    }
+
+    upstream frontend_management {
+        server ${MANAGEMENT_PRIVATE_IP}:8080;
+    }
+
+    upstream frontend_institucional {
+        server ${INSTITUCIONAL_PRIVATE_IP}:8081;
+    }
+
+    # ─── Servidor Principal ───────────────────────────────────────────────────
+    server {
+        listen 80;
+        server_name _;
+
+        proxy_set_header Host              $host;
+        proxy_set_header X-Real-IP         $remote_addr;
+        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        proxy_connect_timeout 60s;
+        proxy_send_timeout    60s;
+        proxy_read_timeout    60s;
+
+        # ── API Backend ────────────────────────────────────────────────────
+        location /api/ {
+            proxy_pass http://backend/api/;
+        }
+
+        # ── Management System ──────────────────────────────────────────────
+        location /ui/management/ {
+            proxy_pass http://frontend_management/;
+            proxy_redirect / /ui/management/;
+        }
+
+        # ── Institucional Website ──────────────────────────────────────────
+        location /ui/institucional/ {
+            proxy_pass http://frontend_institucional/;
+            proxy_redirect / /ui/institucional/;
+        }
+
+        # ── Raiz ───────────────────────────────────────────────────────────
+        location = / {
+            return 302 /ui/management/;
+        }
+
+        # ── Healthcheck ────────────────────────────────────────────────────
+        location /health {
+            access_log off;
+            return 200 "solarway-proxy OK\n";
+            add_header Content-Type text/plain;
+        }
+    }
+}
