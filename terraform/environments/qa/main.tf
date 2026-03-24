@@ -85,6 +85,8 @@ resource "null_resource" "deploy" {
       "echo '➡️ Ajustando URLs no .env para o IP Público: ${module.ec2_qa.public_ip}...'",
       "sed -i 's/localhost:8000/${module.ec2_qa.public_ip}:8000/g' .env",
       "echo '➡️ Iniciando setup da VM e deploy do ambiente...'",
+      "sed -i 's/\r//' scripts/setup/setup-vm.sh",
+      "sed -i 's/\r//' scripts/setup/setup-qa.sh",
       "chmod +x scripts/setup/setup-vm.sh scripts/setup/setup-qa.sh",
       "sudo bash scripts/setup/setup-qa.sh"
     ]

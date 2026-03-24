@@ -47,4 +47,7 @@ cd "$BASE_DIR/services/frontend/management-system" && sudo docker compose --env-
 echo "➡️ [QA-FRONTEND] Iniciando Institutional Website..."
 cd "$BASE_DIR/services/frontend/institucional-website" && sudo docker compose --env-file ../../../.env up -d
 
+echo "➡️ [QA-PROXY] Iniciando Proxy..."
+cd "$BASE_DIR/services/proxy" && sudo docker compose --env-file ../../.env up -d
+
 echo "✅ [QA] Ambiente provisionado com sucesso em http://$(curl -s ifconfig.me)"

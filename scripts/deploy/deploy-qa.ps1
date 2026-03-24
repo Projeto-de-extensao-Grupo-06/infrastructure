@@ -1,6 +1,6 @@
 # deploy-qa.ps1
 # Script para deploy automatizado no ambiente de QA do SolarWay
-# Uso: .\scripts\deploy-qa.ps1
+# Uso: .\scripts\deploy\deploy-qa.ps1
 
 $ErrorActionPreference = "Stop"
 

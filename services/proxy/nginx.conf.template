@@ -42,25 +42,25 @@ http {
         proxy_read_timeout    60s;
 
         # ── API Backend ────────────────────────────────────────────────────
-        location /api/ {
+        location /api {
             proxy_pass http://backend/api/;
         }
 
         # ── Management System ──────────────────────────────────────────────
-        location /ui/management/ {
+        location /ui/management {
             proxy_pass http://frontend_management/;
             proxy_redirect / /ui/management/;
         }
 
         # ── Institucional Website ──────────────────────────────────────────
-        location /ui/institucional/ {
+        location /ui/institucional {
             proxy_pass http://frontend_institucional/;
             proxy_redirect / /ui/institucional/;
         }
 
         # ── Raiz ───────────────────────────────────────────────────────────
         location = / {
-            return 302 /ui/management/;
+            return 302 /ui/management;
         }
 
         # ── Healthcheck ────────────────────────────────────────────────────
