@@ -13,14 +13,8 @@ fi
 
 echo "➡️ [PROD-BOT] Configurando Código..."
 sudo su - "$TARGET_USER" -c "
-  cd ~
-  if [ ! -d 'docker-composes' ]; then
-    git clone https://github.com/Projeto-de-extensao-Grupo-06/docker-composes.git
-  else
-    cd docker-composes && git pull && cd ..
-  fi
-
-  cd docker-composes
+  BASE_DIR="/tmp/solarway"
+  cd "$BASE_DIR"
   echo 'Aguardando Docker daemon...'
   while ! docker info >/dev/null 2>&1; do sleep 2; done
 

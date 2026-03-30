@@ -54,3 +54,9 @@ variable "allowed_cidr_blocks" {
   type        = list(string)
   default     = ["0.0.0.0/0"]
 }
+
+variable "iam_instance_profile" {
+  description = "IAM Instance Profile para acesso S3"
+  type        = string
+  default     = ""
+}

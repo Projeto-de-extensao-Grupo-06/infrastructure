@@ -13,14 +13,8 @@ fi
 
 echo "➡️ [PROD-DB] Configurando Código..."
 sudo su - "$TARGET_USER" -c "
-  cd ~
-  if [ ! -d 'docker-composes' ]; then
-    git clone https://github.com/Projeto-de-extensao-Grupo-06/docker-composes.git
-  else
-    cd docker-composes && git pull && cd ..
-  fi
-
-  cd docker-composes
+  BASE_DIR="/tmp/solarway"
+  cd "$BASE_DIR"
   echo 'Aguardando Docker daemon...'
   while ! docker info >/dev/null 2>&1; do sleep 2; done
 
@@ -31,3 +25,17 @@ sudo su - "$TARGET_USER" -c "
   docker compose --env-file ../../.env up -d
 "
 echo "✅ [PROD-DB] Provisionamento Finalizado!"
+
+# Healthcheck
+sleep 10
+if ! nc -z localhost 3306; then
+  echo "❌ MySQL nao responde"
+  exit 1
+fi
+
+if ! nc -z localhost 6379; then
+  echo "❌ Redis nao responde"
+  exit 1
+fi
+
+echo "✅ Database healthcheck OK"

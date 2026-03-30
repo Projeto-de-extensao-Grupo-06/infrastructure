@@ -39,7 +39,8 @@ resource "aws_instance" "this" {
     volume_type = "gp3"
   }
 
-  user_data = var.user_data != "" ? var.user_data : null
+  iam_instance_profile = var.iam_instance_profile != "" ? var.iam_instance_profile : null
+  user_data            = var.user_data != "" ? var.user_data : null
 
   tags = {
     Name        = "solarway-ec2-${var.instance_name}-${var.environment}"

@@ -15,16 +15,20 @@ module "vpc_prod" {
   source = "../../modules/vpc"
 
   environment = "prod"
-  vpc_cidr    = "10.0.0.0/16"
+  vpc_cidr    = "10.0.0.0/24"
 
-  public_subnets = ["10.0.1.0/24", "10.0.4.0/24"]
+  # Subnet Pública
+  public_subnets = ["10.0.0.0/28"]
+
+  # Subnets Privadas
   private_subnets = [
-    "10.0.2.0/24", # A (Frontend)
-    "10.0.3.0/24", # B (Backend)
-    "10.0.5.0/24", # C (Chatbot/Webscraping)
-    "10.0.6.0/24"  # D (Banco de Dados) 
+    "10.0.0.16/28",
+    "10.0.0.32/28",
+    "10.0.0.48/28",
+    "10.0.0.64/28"
   ]
-  azs = ["us-east-1a", "us-east-1b", "us-east-1a", "us-east-1b", "us-east-1a", "us-east-1b"]
+
+  azs = ["us-east-1a", "us-east-1a", "us-east-1a", "us-east-1a", "us-east-1a"]
 }
 
 module "ec2_nginx" {
@@ -48,9 +52,11 @@ module "ec2_frontend_1" {
   instance_type  = "t3.small"
   vpc_id         = module.vpc_prod.vpc_id
   subnet_id      = module.vpc_prod.private_subnet_ids[0]
+  key_name       = var.key_name
   frontend_ports = [22, 8081] # Apenas Institucional Website
-  allowed_cidr_blocks = ["10.0.0.0/16"]
-  user_data      = "${file("../../../scripts/setup/setup-vm.sh")}\n${replace(file("../../../scripts/setup/prod/setup-frontend.sh"), "#!/bin/bash", "export FRONTEND_TYPE=\"institutional\"")}"
+  allowed_cidr_blocks  = ["10.0.0.0/24"]
+  iam_instance_profile = "LabInstanceProfile"
+  user_data            = "${file("../../../scripts/setup/setup-vm.sh")}\n${replace(file("../../../scripts/setup/prod/setup-frontend.sh"), "#!/bin/bash", "export FRONTEND_TYPE=\"institutional\"")}"
 }
 
 module "ec2_frontend_2" {
@@ -61,9 +67,11 @@ module "ec2_frontend_2" {
   instance_type  = "t3.small"
   vpc_id         = module.vpc_prod.vpc_id
   subnet_id      = module.vpc_prod.private_subnet_ids[0]
+  key_name       = var.key_name
   frontend_ports = [22, 8080] # Apenas Management System
-  allowed_cidr_blocks = ["10.0.0.0/16"]
-  user_data      = "${file("../../../scripts/setup/setup-vm.sh")}\n${replace(file("../../../scripts/setup/prod/setup-frontend.sh"), "#!/bin/bash", "export FRONTEND_TYPE=\"management\"")}"
+  allowed_cidr_blocks  = ["10.0.0.0/24"]
+  iam_instance_profile = "LabInstanceProfile"
+  user_data            = "${file("../../../scripts/setup/setup-vm.sh")}\n${replace(file("../../../scripts/setup/prod/setup-frontend.sh"), "#!/bin/bash", "export FRONTEND_TYPE=\"management\"")}"
 }
 
 module "ec2_backend_1" {
@@ -74,9 +82,11 @@ module "ec2_backend_1" {
   instance_type  = "t3.medium"
   vpc_id         = module.vpc_prod.vpc_id
   subnet_id      = module.vpc_prod.private_subnet_ids[1]
+  key_name       = var.key_name
   frontend_ports = [22, 8000] # Apenas Monolito
-  allowed_cidr_blocks = ["10.0.0.0/16"]
-  user_data      = "${file("../../../scripts/setup/setup-vm.sh")}\n${replace(file("../../../scripts/setup/prod/setup-backend.sh"), "#!/bin/bash", "export BACKEND_TYPE=\"monolith\"")}"
+  allowed_cidr_blocks  = ["10.0.0.0/24"]
+  iam_instance_profile = "LabInstanceProfile"
+  user_data            = "${file("../../../scripts/setup/setup-vm.sh")}\n${replace(file("../../../scripts/setup/prod/setup-backend.sh"), "#!/bin/bash", "export BACKEND_TYPE=\"monolith\"")}"
 }
 
 module "ec2_backend_2" {
@@ -87,9 +97,11 @@ module "ec2_backend_2" {
   instance_type  = "t3.medium"
   vpc_id         = module.vpc_prod.vpc_id
   subnet_id      = module.vpc_prod.private_subnet_ids[1]
+  key_name       = var.key_name
   frontend_ports = [22, 8082] # Apenas Microserviço
-  allowed_cidr_blocks = ["10.0.0.0/16"]
-  user_data      = "${file("../../../scripts/setup/setup-vm.sh")}\n${replace(file("../../../scripts/setup/prod/setup-backend.sh"), "#!/bin/bash", "export BACKEND_TYPE=\"microservice\"")}"
+  allowed_cidr_blocks  = ["10.0.0.0/24"]
+  iam_instance_profile = "LabInstanceProfile"
+  user_data            = "${file("../../../scripts/setup/setup-vm.sh")}\n${replace(file("../../../scripts/setup/prod/setup-backend.sh"), "#!/bin/bash", "export BACKEND_TYPE=\"microservice\"")}"
 }
 
 module "ec2_chatbot" {
@@ -99,10 +111,12 @@ module "ec2_chatbot" {
   instance_name  = "chatbot"
   instance_type  = "t3.small"
   vpc_id         = module.vpc_prod.vpc_id
-  subnet_id      = module.vpc_prod.private_subnet_ids[2]
+  subnet_id      = module.vpc_prod.private_subnet_ids[3]
+  key_name       = var.key_name
   frontend_ports = [22, 3000, 5678]
-  allowed_cidr_blocks = ["10.0.0.0/16"]
-  user_data      = "${file("../../../scripts/setup/setup-vm.sh")}\n${replace(file("../../../scripts/setup/prod/setup-bot.sh"), "#!/bin/bash", "export BOT_TYPE=\"chatbot\"")}"
+  allowed_cidr_blocks  = ["10.0.0.0/24"]
+  iam_instance_profile = "LabInstanceProfile"
+  user_data            = "${file("../../../scripts/setup/setup-vm.sh")}\n${replace(file("../../../scripts/setup/prod/setup-bot.sh"), "#!/bin/bash", "export BOT_TYPE=\"chatbot\"")}"
 }
 
 module "ec2_webscraping" {
@@ -112,10 +126,12 @@ module "ec2_webscraping" {
   instance_name  = "webscraping"
   instance_type  = "t3.micro"
   vpc_id         = module.vpc_prod.vpc_id
-  subnet_id      = module.vpc_prod.private_subnet_ids[2]
+  subnet_id      = module.vpc_prod.private_subnet_ids[3]
+  key_name       = var.key_name
   frontend_ports = [22, 5000]
-  allowed_cidr_blocks = ["10.0.0.0/16"]
-  user_data      = "${file("../../../scripts/setup/setup-vm.sh")}\n${replace(file("../../../scripts/setup/prod/setup-bot.sh"), "#!/bin/bash", "export BOT_TYPE=\"webscraping\"")}"
+  allowed_cidr_blocks  = ["10.0.0.0/24"]
+  iam_instance_profile = "LabInstanceProfile"
+  user_data            = "${file("../../../scripts/setup/setup-vm.sh")}\n${replace(file("../../../scripts/setup/prod/setup-bot.sh"), "#!/bin/bash", "export BOT_TYPE=\"webscraping\"")}"
 }
 
 module "ec2_db" {
@@ -125,9 +141,10 @@ module "ec2_db" {
   instance_name  = "database"
   instance_type  = "t3.large"
   vpc_id         = module.vpc_prod.vpc_id
-  subnet_id      = module.vpc_prod.private_subnet_ids[3]
+  subnet_id      = module.vpc_prod.private_subnet_ids[2]
+  key_name       = var.key_name
   frontend_ports = [22, 3306, 6379]
-  allowed_cidr_blocks = ["10.0.0.0/16"]
+  allowed_cidr_blocks = ["10.0.0.0/24"]
   user_data      = "${file("../../../scripts/setup/setup-vm.sh")}\n${file("../../../scripts/setup/prod/setup-db.sh")}"
 }
 
@@ -208,6 +225,8 @@ resource "null_resource" "nginx_deploy" {
       "echo 'BACKEND_PRIVATE_IP=${module.ec2_backend_1.private_ip}' >> /tmp/solarway/.env",
       "echo 'MANAGEMENT_PRIVATE_IP=${module.ec2_frontend_2.private_ip}' >> /tmp/solarway/.env",
       "echo 'INSTITUCIONAL_PRIVATE_IP=${module.ec2_frontend_1.private_ip}' >> /tmp/solarway/.env",
+      "sed -i 's/\\r$//' /tmp/solarway/scripts/setup/setup-vm.sh",
+      "sed -i 's/\\r$//' /tmp/solarway/scripts/setup/prod/setup-proxy.sh",
       "chmod +x /tmp/solarway/scripts/setup/setup-vm.sh",
       "chmod +x /tmp/solarway/scripts/setup/prod/setup-proxy.sh",
       "sudo bash /tmp/solarway/scripts/setup/prod/setup-proxy.sh",
@@ -236,4 +255,19 @@ module "s3_refined" {
 
   environment = "prod"
   bucket_name = "solarway-datalake-refined"
+}
+
+resource "aws_vpc_endpoint" "s3" {
+  vpc_id       = module.vpc_prod.vpc_id
+  service_name = "com.amazonaws.us-east-1.s3"
+
+  route_table_ids = [
+    module.vpc_prod.public_route_table_id,
+    module.vpc_prod.private_route_table_id
+  ]
+
+  tags = {
+    Name = "solarway-s3-endpoint"
+    Environment = "prod"
+  }
 }
