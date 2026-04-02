@@ -1,5 +1,4 @@
 #!/bin/bash
-# TODO - Testar budega de script
 # ==============================================================================
 # Ambiente: PRODUÇÃO
 # Camada: Frontend EC2 (Inst. Website e Sistema de Gestão)
@@ -12,33 +11,59 @@ if [ "$EUID" -eq 0 ]; then
 fi
 
 echo "➡️ [PROD-FRONT] Configurando Código..."
-sudo su - "$TARGET_USER" -c "
-  BASE_DIR="/tmp/solarway"
-  cd "$BASE_DIR"
-  echo 'Aguardando Docker daemon...'
-  while ! docker info >/dev/null 2>&1; do sleep 2; done
 
-  # Login no GitHub Packages antes de dar pull
-  if [ -f .env ]; then
-    export $(grep -v '^#' .env | xargs)
-    echo "$GITHUB_ACCESS_TOKEN" | docker login ghcr.io -u "$GITHUB_USERNAME" --password-stdin
+BASE_DIR="/tmp/solarway"
+if [ ! -d "$BASE_DIR" ]; then
+    echo "❌ Erro: Diretório $BASE_DIR não encontrado!"
+    exit 1
+fi
+
+cd "$BASE_DIR"
+
+echo 'Aguardando Docker daemon...'
+for i in {1..30}; do
+    if sudo docker info >/dev/null 2>&1; then
+        echo "✅ Docker está pronto!"
+        break
+    fi
+    echo "Aguardando Docker..."
+    sleep 2
+done
+
+# Login no GitHub Packages (GHCR)
+if [ -f .env ]; then
+  export $(grep -v '^#' .env | xargs)
+  if [ ! -z "$GITHUB_ACCESS_TOKEN" ]; then
+    echo "Efetuando login no GHCR..."
+    echo "$GITHUB_ACCESS_TOKEN" | sudo docker login ghcr.io -u "$GITHUB_USERNAME" --password-stdin
   fi
+fi
 
-  # Diferenciação de apps baseada em variável de ambiente (FRONTEND_TYPE)
-  if [[ "$FRONTEND_TYPE" == "institutional" || -z "$FRONTEND_TYPE" ]]; then
+# Diferenciação de apps baseada em variável de ambiente (FRONTEND_TYPE)
+if [[ "$FRONTEND_TYPE" == "institutional" || -z "$FRONTEND_TYPE" ]]; then
     echo "➡️ [PROD-FRONT] Iniciando Institucional Website..."
-    cd services/frontend/institucional-website
-    docker compose pull
-    docker compose --env-file ../../../.env up -d
-    cd ../../..
-  fi
+    if [ -d "services/frontend/institucional-website" ]; then
+        cd services/frontend/institucional-website
+        sudo docker compose pull
+        sudo docker compose --env-file ../../../.env up -d
+        cd ../../..
+    else
+        echo "❌ Erro: Diretório services/frontend/institucional-website não encontrado!"
+        exit 1
+    fi
+fi
 
-  if [[ "$FRONTEND_TYPE" == "management" || -z "$FRONTEND_TYPE" ]]; then
+if [[ "$FRONTEND_TYPE" == "management" || -z "$FRONTEND_TYPE" ]]; then
     echo "➡️ [PROD-FRONT] Iniciando Management System..."
-    cd services/frontend/management-system
-    docker compose pull
-    docker compose --env-file ../../../.env up -d
-    cd ../../..
-  fi
-"
+    if [ -d "services/frontend/management-system" ]; then
+        cd services/frontend/management-system
+        sudo docker compose pull
+        sudo docker compose --env-file ../../../.env up -d
+        cd ../../..
+    else
+        echo "❌ Erro: Diretório services/frontend/management-system não encontrado!"
+        exit 1
+    fi
+fi
+
 echo "✅ [PROD-FRONT] Provisionamento Finalizado!"

@@ -1,5 +1,4 @@
 #!/bin/bash
-# TODO - Testar budega de script
 # ==============================================================================
 # Ambiente: PRODUÇÃO
 # Camada: Database EC2
@@ -11,23 +10,50 @@ if [ "$EUID" -eq 0 ]; then
     export DEBIAN_FRONTEND=noninteractive
 fi
 
-echo "➡️ [PROD-DB] Configurando Código..."
-sudo su - "$TARGET_USER" -c "
-  BASE_DIR="/tmp/solarway"
-  cd "$BASE_DIR"
-  echo 'Aguardando Docker daemon...'
-  while ! docker info >/dev/null 2>&1; do sleep 2; done
+echo "➡️ [PROD-DB] Provisionando com Docker..."
 
-  # Injeção via AWS Parameter Store, Secrets Manager, etc., pode substituir o step abaixo.
-  # Assumindo que haverá injeção ambiental primária para a camada:
-  cd services/db
-  docker compose pull
-  docker compose --env-file ../../.env up -d
-"
+BASE_DIR="/tmp/solarway"
+if [ ! -d "$BASE_DIR" ]; then
+    echo "❌ Erro: Diretório $BASE_DIR não encontrado!"
+    exit 1
+fi
+
+cd "$BASE_DIR"
+
+echo 'Aguardando Docker daemon...'
+for i in {1..30}; do
+    if sudo docker info >/dev/null 2>&1; then
+        echo "✅ Docker está pronto!"
+        break
+    fi
+    echo "Aguardando Docker..."
+    sleep 2
+done
+
+# Login no GitHub Packages (GHCR)
+if [ -f .env ]; then
+  export $(grep -v '^#' .env | xargs)
+  if [ ! -z "$GITHUB_ACCESS_TOKEN" ]; then
+    echo "Efetuando login no GHCR..."
+    echo "$GITHUB_ACCESS_TOKEN" | sudo docker login ghcr.io -u "$GITHUB_USERNAME" --password-stdin
+  fi
+fi
+
+if [ -d "services/db" ]; then
+    cd services/db
+    echo "➡️ [PROD-DB] Pulling images..."
+    sudo docker compose pull
+    echo "➡️ [PROD-DB] Starting containers..."
+    sudo docker compose --env-file ../../.env up -d
+else
+    echo "❌ Erro: Diretório services/db não encontrado!"
+    exit 1
+fi
+
 echo "✅ [PROD-DB] Provisionamento Finalizado!"
 
 # Healthcheck
-sleep 10
+sleep 15
 if ! nc -z localhost 3306; then
   echo "❌ MySQL nao responde"
   exit 1

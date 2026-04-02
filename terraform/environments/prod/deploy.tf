@@ -38,12 +38,24 @@ variable "key_name" {
   default = "solarway-key"
 }
 
+variable "github_username" {
+  type      = string
+  sensitive = true
+}
+
+variable "github_token" {
+  type      = string
+  sensitive = true
+}
+
 resource "null_resource" "deploy_db" {
   triggers = {
     instance_id = module.ec2_db.instance_id
     env_hash    = md5(templatefile("${path.module}/templates/env.db.tmpl", {
-      db_password     = var.db_password
-      redis_password  = var.redis_password
+      db_password          = var.db_password
+      redis_password       = var.redis_password
+      github_username      = var.github_username
+      github_access_token  = var.github_token
     }))
   }
 
@@ -64,10 +76,12 @@ resource "null_resource" "deploy_db" {
 
   provisioner "file" {
     content     = templatefile("${path.module}/templates/env.db.tmpl", {
-      db_password     = var.db_password
-      redis_password  = var.redis_password
+      db_password          = var.db_password
+      redis_password       = var.redis_password
+      github_username      = var.github_username
+      github_access_token  = var.github_token
     })
-    destination = "/tmp/solarway/.env"
+    destination = "/tmp/solarway/services/db/.env"
   }
 
   provisioner "file" {
@@ -113,14 +127,16 @@ resource "null_resource" "deploy_backend_1" {
   provisioner "remote-exec" { inline = ["mkdir -p /tmp/solarway/services/backend/monolith", "mkdir -p /tmp/solarway/scripts/setup/prod"] }
   provisioner "file" {
     content = templatefile("${path.module}/templates/env.backend.tmpl", {
-      db_private_ip  = module.ec2_db.private_ip
-      db_password    = var.db_password
-      bucket_name    = var.bucket_name
-      email          = var.email
-      email_password = var.email_password
-      bot_secret     = var.bot_secret
+      db_private_ip        = module.ec2_db.private_ip
+      db_password          = var.db_password
+      bucket_name          = var.bucket_name
+      email                = var.email
+      email_password       = var.email_password
+      bot_secret           = var.bot_secret
+      github_username      = var.github_username
+      github_access_token  = var.github_token
     })
-    destination = "/tmp/solarway/.env"
+    destination = "/tmp/solarway/services/backend/monolith/.env"
   }
   provisioner "file" {
     source      = "../../../services/backend/monolith/"
@@ -162,14 +178,16 @@ resource "null_resource" "deploy_backend_2" {
   provisioner "remote-exec" { inline = ["mkdir -p /tmp/solarway/services/backend/microservice", "mkdir -p /tmp/solarway/scripts/setup/prod"] }
   provisioner "file" {
     content = templatefile("${path.module}/templates/env.backend.tmpl", {
-      db_private_ip  = module.ec2_db.private_ip
-      db_password    = var.db_password
-      bucket_name    = var.bucket_name
-      email          = var.email
-      email_password = var.email_password
-      bot_secret     = var.bot_secret
+      db_private_ip        = module.ec2_db.private_ip
+      db_password          = var.db_password
+      bucket_name          = var.bucket_name
+      email                = var.email
+      email_password       = var.email_password
+      bot_secret           = var.bot_secret
+      github_username      = var.github_username
+      github_access_token  = var.github_token
     })
-    destination = "/tmp/solarway/.env"
+    destination = "/tmp/solarway/services/backend/microservice/.env"
   }
   provisioner "file" {
     source      = "../../../services/backend/microservice/"
@@ -213,7 +231,7 @@ resource "null_resource" "deploy_frontend_1" {
     content = templatefile("${path.module}/templates/env.frontend.tmpl", {
       backend_1_ip = module.ec2_backend_1.private_ip
     })
-    destination = "/tmp/solarway/.env"
+    destination = "/tmp/solarway/services/frontend/institucional-website/.env"
   }
   provisioner "file" {
     source      = "../../../services/frontend/institucional-website/"
@@ -257,7 +275,7 @@ resource "null_resource" "deploy_frontend_2" {
     content = templatefile("${path.module}/templates/env.frontend.tmpl", {
       backend_1_ip = module.ec2_backend_1.private_ip
     })
-    destination = "/tmp/solarway/.env"
+    destination = "/tmp/solarway/services/frontend/management-system/.env"
   }
   provisioner "file" {
     source      = "../../../services/frontend/management-system/"

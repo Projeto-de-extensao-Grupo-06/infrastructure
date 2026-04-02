@@ -39,7 +39,8 @@ As imagens deste serviço são hospedadas no **GitHub Container Registry (GHCR)*
 A API do SpringBoot necessita de várias injeções no ambiente contêiner. Atente-se ao bloco `environment` no seu `docker-compose.yml`, você deve referenciar / suprir as variáveis necessárias para as seguintes obrigações:
 - **Banco de Dados Relacional**: Endpoint, Usuário, Senha e Estratégia JPA (`SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD`).
 - **Persistência Volátil (Redis)**: Host e Porta (`SPRING_DATA_REDIS_HOST`).
-- **Credenciais em Nuvem (AWS S3)**: Configurações como `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, e `BUCKET_NAME` para suporte ao armazenamento.
+- **Credenciais em Nuvem (AWS S3)**: Configurações como `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, e `BUCKET_NAME`.
+- **Gestão de Imagens (GHCR)**: É obrigatório possuir as chaves `GITHUB_USERNAME` e `GITHUB_ACCESS_TOKEN` no `.env`. Os scripts de setup utilizam estas chaves para realizar o `docker login` e `docker compose pull` automaticamente.
 
 Para o `microservice/`, frequentemente é requerido um arquivo local `.env` repassando variáveis pontuais como `DB_PASSWORD`.
 

@@ -28,9 +28,12 @@ A justificativa técnica para isso é que este `docker-compose.yml` expõe e cri
 
 ## Gestão de Imagens (GitHub Packages)
 
-Para garantir o pull das imagens (MySQL/Redis) em ambientes de produção e QA usando a infraestrutura unificada:
-1. **Login**: `echo $GITHUB_ACCESS_TOKEN | docker login ghcr.io -u $GITHUB_USERNAME --password-stdin`
-2. **Pull**: `docker-compose pull`
+Para garantir o pull das imagens (MySQL/Redis) em ambientes de produção e QA:
+1.  **Configuração**: Certifique-se de que as chaves `GITHUB_USERNAME` e `GITHUB_ACCESS_TOKEN` (com permissão `read:packages`) estão presentes no seu arquivo `.env`.
+2.  **Login Automatizado**: Os scripts de setup (`setup-db.sh`) realizam o `docker login` automaticamente usando estas variáveis.
+3.  **Manual**: Caso precise fazer manualmente: 
+    `echo $GITHUB_ACCESS_TOKEN | docker login ghcr.io -u $GITHUB_USERNAME --password-stdin`
+4.  **Pull**: `docker compose pull`
 
 ---
 

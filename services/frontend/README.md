@@ -35,12 +35,16 @@ As imagens são hospedadas no **GHCR** sob `ghcr.io/projeto-de-extensao-grupo-06
 
 ```bash
 # Autenticação
+# Utilize as chaves GITHUB_USERNAME e GITHUB_ACCESS_TOKEN do seu .env
 echo $GITHUB_ACCESS_TOKEN | docker login ghcr.io -u $GITHUB_USERNAME --password-stdin
 
 # Build e push (exemplo management-system)
 docker build -t ghcr.io/projeto-de-extensao-grupo-06/management-system:latest .
 docker push ghcr.io/projeto-de-extensao-grupo-06/management-system:latest
 ```
+
+> [!IMPORTANT]
+> Para o deploy automático em ambiente AWS/Produção, estas variáveis devem estar presentes no arquivo `.env` local para que o Terraform as injete nas instâncias e permita o pull das imagens privadas.
 
 ---
 
