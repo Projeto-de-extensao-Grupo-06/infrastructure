@@ -13,6 +13,7 @@ Recentemente, a arquitetura da aplicação foi **pulverizada** (separada) em dif
   - `institucional-website/`: O site institucional voltado para apresentação.
   - `management-system/`: O sistema gerencial privado e painel de controle.
 - **`services/bot/`**: A stack de automação inteligente de WhatsApp utilizando n8n, WAHA e Redis.
+- **`services/web-scrapping/`**: Job batch de atualização de preços via Mercado Livre, executado a cada 24h.
 
 Outras pastas relevantes no repositório geral:
 - `proxy/`: Configurações de proxy reverso e balanceadores de carga.
@@ -28,12 +29,13 @@ Para rodar e configurar um componente específico, acesse as documentações de 
 - 📖 **[Documentação do Backend](./services/backend/README.md)**
 - 📖 **[Documentação do Frontend](./services/frontend/README.md)**
 - 📖 **[Documentação do Bot](./services/bot/README.md)**
+- 📖 **[Documentação do Web Scrapping](./services/web-scrapping/README.md)**
 
 ---
 
 ## Início Rápido (Execução Local Completa)
 
-Para testes, homologações ou desenvolvimento contínuo local, foram providenciados scripts abstraem a complexidade do cluster e obedecem rigidamente à ordem cronológica de inicializações (Banco de Dados Primário ➔ Backend Originador da Rede ➔ Interfaces e Bots).
+Para testes, homologações ou desenvolvimento contínuo local, foram providenciados scripts que abstraem a complexidade do cluster e obedecem rigidamente à ordem cronológica de inicializações (Banco de Dados Primário ➔ Backend Originador da Rede ➔ Interfaces e Bots ➔ Web Scrapping).
 
 Abra um terminal na **raiz** deste diretório e execute o script apropriado ao seu ecossistema:
 
@@ -47,7 +49,95 @@ Abra um terminal na **raiz** deste diretório e execute o script apropriado ao s
 ./scripts/setup/setup-local.sh
 ```
 
-Isso subirá de uma só vez o MySQL, o Redis-Multidb, o Monolito do Spring Boot, os contêineres do Sistema de Gerenciamento, do Site e dos serviços nativos do WhatsApp IA.
+Isso subirá de uma só vez o MySQL, o Redis-Multidb, o Monolito do Spring Boot, os contêineres do Sistema de Gerenciamento, do Site Institucional, dos serviços nativos do WhatsApp IA e o scheduler de web scrapping.
+
+---
+
+## 🗺️ Mapa Completo de URLs — Ambiente Local
+
+O ponto de entrada único local é o **Nginx Proxy** na porta **80** (gerencial) e **81** (institucional). O `.env` define as portas de cada serviço.
+
+### Interfaces de Usuário (via Proxy Nginx — porta 80/81)
+
+| URL | Serviço | Container |
+|-----|---------|-----------|
+| `http://localhost/` | Management System (redirect) | `management-system` |
+| `http://localhost/ui/management` | Sistema Gerencial (painel) | `management-system` |
+| `http://localhost:81/` | Site Institucional | `institutional-website` |
+| `http://localhost:81/ui/institucional` | Site Institucional | `institutional-website` |
+| `http://localhost/health` | Healthcheck do Proxy Nginx | `nginx-proxy` |
+
+> [!NOTE]
+> Acessar `http://localhost/` redireciona automaticamente para `/ui/management`. A porta `81` **não passa pelo proxy central** em produção — é apenas para acesso local direto.
+
+### API Backend (acesso direto por porta)
+
+| URL | Serviço | Container | Nota |
+|-----|---------|-----------|------|
+| `http://localhost:8000` | Backend Monolito (Spring Boot) | `backend-service` | Porta exposta por `PORT_BACKEND_MONOLITH` |
+| `http://localhost:8000/api` | Endpoints REST da API principal | `backend-service` | Base de todas as chamadas do frontend |
+| `http://localhost:8000/health` | Healthcheck do monolito | `backend-service` | |
+| `http://localhost:8082` | Schedule Notification (microserviço) | `schedule-notification` | Porta exposta por `PORT_BACKEND_MICROSERVICE` |
+
+> [!IMPORTANT]
+> O frontend acessa o backend **internamente** via `http://backend-service:8000` (DNS Docker). As portas acima são expostas apenas para acesso **externo do host** (ex: curl, Postman, testes).
+
+### Banco de Dados e Cache
+
+| URL / Endpoint | Serviço | Container | Porta no host |
+|----------------|---------|-----------|---------------|
+| `localhost:3307` | MySQL principal | `mysql-db` | `PORT_MYSQL` (padrão: 3307) |
+| `localhost:6379` | Redis principal (backend) | `redis-multidb` | `PORT_REDIS` (padrão: 6379) |
+| `localhost:6380` | Redis do bot (n8n/WAHA) | `bot-redis` | `PORT_BOT_REDIS` (padrão: 6380) |
+| `localhost:3306` | MySQL do microserviço | `microservice-db` | `PORT_MICROSERVICE_DB` (padrão: 3306) |
+
+> [!NOTE]
+> A porta `3307` (host) mapeia para `3306` dentro do container. Conectores JDBC **internos** sempre usam a porta `3306`. Use `3307` apenas para acesso externo (ex: DBeaver, TablePlus).
+
+### Bot WhatsApp (n8n + WAHA)
+
+| URL | Serviço | Container | Porta no host |
+|-----|---------|-----------|---------------|
+| `http://localhost:5678` | n8n (editor de fluxos) | `bot-n8n` | `PORT_N8N` (padrão: 5678) |
+| `http://localhost:3000` | WAHA (API WhatsApp) | `bot-waha` | `PORT_WAHA` (padrão: 3000) |
+| `http://localhost:3000/dashboard` | Dashboard WAHA | `bot-waha` | — |
+
+### Web Scrapping (Job Batch)
+
+| Serviço | Container | Frequência | Descrição |
+|---------|-----------|------------|-----------|
+| Web Scrapping Scheduler | `web-scrapping-scheduler` | A cada 24h | Atualiza preços da tabela `material_url` via Mercado Livre |
+
+> [!NOTE]
+> O web scrapping **não expõe porta alguma**. É um job batch interno que se conecta diretamente ao `mysql-db` pela rede `storage_network` e atualiza os preços dos materiais com dados do Mercado Livre.
+
+---
+
+## 🗺️ Mapa Completo de URLs — Ambiente QA (EC2 AWS)
+
+No ambiente QA, todos os serviços rodam em **uma única VM EC2** (`t3.large`). Substitua `<IP_PUBLICO_QA>` pelo IP público da instância.
+
+### Interfaces de Usuário (via Proxy Nginx)
+
+| URL | Serviço |
+|-----|---------|
+| `http://<IP_PUBLICO_QA>/` | Management System (redirect) |
+| `http://<IP_PUBLICO_QA>/ui/management` | Sistema Gerencial |
+| `http://<IP_PUBLICO_QA>/ui/institucional` | Site Institucional |
+| `http://<IP_PUBLICO_QA>/health` | Healthcheck do Proxy |
+
+### API e Serviços (acesso direto por porta)
+
+| URL | Serviço |
+|-----|---------|
+| `http://<IP_PUBLICO_QA>:8000/api` | Backend Monolito — API REST |
+| `http://<IP_PUBLICO_QA>:8082` | Schedule Notification (microserviço) |
+| `http://<IP_PUBLICO_QA>:5678` | n8n (editor de fluxos WhatsApp) |
+| `http://<IP_PUBLICO_QA>:3000` | WAHA (API WhatsApp) |
+| `http://<IP_PUBLICO_QA>:3000/dashboard` | Dashboard WAHA |
+
+> [!WARNING]
+> As portas de banco de dados (`3306`, `3307`) **não devem ser expostas** publicamente em QA. Acesse-as apenas via SSH tunneling: `ssh -L 3307:localhost:3307 ubuntu@<IP_PUBLICO_QA> -i solarway.pem`
 
 ---
 
@@ -58,6 +148,7 @@ Seguindo fidedignamente a arquitetura pulverizada da nuvem (onde sub-redes isola
 - **`scripts/setup/setup-qa.sh`**: Instala a infra inteira em uma única máquina Linux para rodadas de testes integrados.
 - **`scripts/prod/setup-[camada].sh`**: Cada arquivo deste atua nativamente ativando só a camada designada (`db`, `backend`, `frontend`, `bot`). 
   - **Diferenciação via Injeção**: Em produção, os scripts suportam as variáveis `FRONTEND_TYPE`, `BACKEND_TYPE` e `BOT_TYPE` para subir apenas o serviço específico daquela VM (ex: apenas Monolito ou apenas Website Institucional), otimizando recursos.
+
 
 ---
 
@@ -103,11 +194,12 @@ Internet ──────────►│  nginx-proxy (ec2_nginx)     │
 
 ### Acesso Local
 
-| URL | Destino |
-|-----|---------|
-| `http://localhost/` | Management System |
-| `http://localhost:81/` | Institucional Website |
-| `http://localhost/health` | Healthcheck do proxy |
+| URL | Destino | Nota |
+|-----|---------|------|
+| `http://localhost/` | Management System | Redireciona para `/ui/management` |
+| `http://localhost/ui/management` | Management System | Rota direta do painel gerencial |
+| `http://localhost:81/` | Site Institucional | Acesso direto local (porta 81) |
+| `http://localhost/health` | Healthcheck do proxy | Retorna `solarway-proxy OK` |
 
 ### Produção AWS
 
@@ -182,12 +274,14 @@ Certifique-se de preencher as seguintes variáveis no seu `.env` antes do deploy
    - **Importante (AWS)**: Para operações de infraestrutura (Terraform), as credenciais devem ser configuradas via `aws configure` e não pelo `.env`. Consulte a [documentação do Terraform](./terraform/README.md) para detalhes.
 
 ## Chaves de Acesso SSH (.pem)
-
-Para que o Terraform consiga realizar o deploy automatizado (provisionamento via SCP e execução remota), é obrigatório possuir uma chave privada no formato .pem na sua conta AWS.
-
-1. **Criação**: No console da AWS Academy / Learner Lab, crie uma chave (Key Pair) do tipo RSA e formato .pem.
-2. **Nome da Chave**: O nome da chave deve ser **solarway**.
-3. **Localização**: Salve o arquivo baixado (solarway.pem) na raiz deste repositório. O Terraform e os scripts de deploy estão configurados para buscar a chave neste local.
-
-> [!IMPORTANT]
-> Cada membro da equipe deve criar sua própria chave no seu ambiente de teste AWS e garantir que o arquivo solarway.pem esteja presente localmente antes de rodar o deploy-qa.ps1.
+ 
+ Para que o Terraform consiga realizar o deploy automatizado (provisionamento via SCP e execução remota), é obrigatório possuir uma chave privada no formato .pem na sua conta AWS.
+ 
+ 1. **Criação**: No console da AWS Academy / Learner Lab, crie uma chave (Key Pair) do tipo RSA e formato .pem.
+ 2. **Configuração (.env)**: No seu arquivo `.env`, defina o nome da chave na variável `AWS_KEY_NAME`.
+    - Exemplo: `AWS_KEY_NAME=minha-chave`
+    - **Padrão**: Caso a variável esteja vazia ou ausente, o sistema assumirá o nome **solarway**.
+ 3. **Localização**: Salve o arquivo baixado (com o nome definido em `AWS_KEY_NAME` e extensão `.pem`) na raiz deste repositório. O Terraform e os scripts de deploy estão configurados para buscar a chave neste local.
+ 
+ > [!IMPORTANT]
+ > Cada membro da equipe deve criar sua própria chave no seu ambiente de teste AWS e garantir que o arquivo .pem correspondente esteja presente localmente antes de rodar o deploy-qa.ps1.

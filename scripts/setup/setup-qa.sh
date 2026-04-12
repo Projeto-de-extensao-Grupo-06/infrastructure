@@ -50,4 +50,29 @@ cd "$BASE_DIR/services/frontend/institucional-website" && sudo docker compose --
 echo "➡️ [QA-PROXY] Iniciando Proxy..."
 cd "$BASE_DIR/services/proxy" && sudo docker compose --env-file ../../.env up -d
 
-echo "✅ [QA] Ambiente provisionado com sucesso em http://$(curl -s ifconfig.me)"
+echo "➡️ [QA-WEBSCRAPPING] Iniciando Web Scrapping (execução a cada 24h)..."
+cd "$BASE_DIR/services/web-scrapping" && sudo docker compose --env-file ../../.env up -d
+
+PUBLIC_IP=$(curl -s ifconfig.me)
+
+echo ""
+echo "======================================================"
+echo "  Ambiente QA provisionado com sucesso!"
+echo "======================================================"
+echo ""
+echo "  IP Público da instância: http://$PUBLIC_IP"
+echo ""
+echo "  Interfaces de Usuário:"
+echo "  ➡️  Management System:   http://$PUBLIC_IP/"
+echo "  ➡️  Site Institucional:  http://$PUBLIC_IP/institucional"
+echo ""
+echo "  APIs e Serviços:"
+echo "  ➡️  API Backend (REST):  http://$PUBLIC_IP/api"
+echo "  ➡️  Schedule Service:    http://$PUBLIC_IP/schedule"
+echo "  ➡️  Healthcheck Proxy:   http://$PUBLIC_IP/health"
+echo ""
+echo "  Bot WhatsApp:"
+echo "  ➡️  n8n (fluxos):        http://$PUBLIC_IP:5678"
+echo "  ➡️  WAHA (dashboard):    http://$PUBLIC_IP:3000/dashboard"
+echo "======================================================"
+echo ""

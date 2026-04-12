@@ -37,5 +37,5 @@ variable "bucket_gold_name" {
 variable "key_name" {
   description = "Nome da chave SSH na AWS"
   type        = string
-  default     = "solarway-key"
+  default     = "solarway"
 }

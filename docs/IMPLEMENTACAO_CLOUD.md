@@ -56,6 +56,7 @@ Este documento descreve a implementação corrigida da infraestrutura Terraform 
 | Deploy Ordem | Paralelo problemático | Sequencial com healthchecks |
 | SG Banco | Aberto para VPC | Restrito ao SG do Backend |
 | Envio de Arquivos | .env manual | Template + provisioners |
+| Chave SSH (.pem) | Hardcoded `solarway` | Variável `AWS_KEY_NAME` no `.env` |
 
 ---
 
@@ -1456,7 +1457,7 @@ networks:
 
 param(
     [Parameter(Mandatory=$false)]
-    [string]$KeyName = "solarway-key",
+    [string]$KeyName = "solarway",
 
     [Parameter(Mandatory=$false)]
     [switch]$Destroy,
@@ -1640,7 +1641,7 @@ Set-Location "../../.."
 
 set -e
 
-KEY_NAME="${1:-solarway-key}"
+KEY_NAME="${1:-solarway}"
 KEY_PATH="./${KEY_NAME}.pem"
 
 GREEN='\033[0;32m'
@@ -1823,15 +1824,15 @@ VITE_API_URL=http://${backend_1_ip}:8000/api
 terraform show
 
 # Ver logs de uma instância específica
-ssh -i solarway-key.pem ubuntu@<proxy-ip> \
+ssh -i solarway.pem ubuntu@<proxy-ip> \
   'ssh ubuntu@<private-ip> "tail -f /var/log/solarway-*.log"'
 
 # Restart de serviço
-ssh -i solarway-key.pem -J ubuntu@<proxy-ip> ubuntu@<private-ip> \
+ssh -i solarway.pem -J ubuntu@<proxy-ip> ubuntu@<private-ip> \
   'sudo docker compose -f /opt/solarway/services/backend/monolith/docker-compose.yml restart'
 
 # Ver containers rodando
-ssh -i solarway-key.pem -J ubuntu@<proxy-ip> ubuntu@<private-ip> \
+ssh -i solarway.pem -J ubuntu@<proxy-ip> ubuntu@<private-ip> \
   'sudo docker ps'
 ```
 
@@ -1880,7 +1881,7 @@ sudo docker compose up -d
 
 Antes de executar o deploy:
 
-- [ ] Chave SSH `solarway-key.pem` existe na raiz
+- [ ] Chave SSH `solarway.pem` existe na raiz
 - [ ] Credenciais AWS configuradas (`aws configure`)
 - [ ] Variáveis de ambiente definidas:
   - [ ] `TF_VAR_db_password`

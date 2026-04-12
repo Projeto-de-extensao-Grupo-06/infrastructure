@@ -213,7 +213,12 @@ INSERT IGNORE INTO material_url (id_material_url, url, fk_material, price, hidde
 (1, 'https://solarcenter.com/fichas/painel550w.pdf', 1, 900.00, FALSE),
 (2, 'https://painelforte.com.br/manual/inversor5kw.pdf', 2, 3500.00, FALSE),
 (3, 'https://ecosolar.com.br/docs/bateria5kwh.pdf', 4, 2800.00, FALSE),
-(4, 'https://solarcenter.com/fichas/cabo6mm.pdf', 3, 12.00, FALSE);
+(4, 'https://solarcenter.com/fichas/cabo6mm.pdf', 3, 12.00, FALSE),
+(5, 'https://produto.mercadolivre.com.br/MLB-4289430353', 1, 820.00, FALSE),
+(6, 'https://produto.mercadolivre.com.br/MLB-5387656668', 2, 2999.00, FALSE),
+(7, 'https://produto.mercadolivre.com.br/MLB-4939530756', 3, 285.00, FALSE),
+(8, 'https://produto.mercadolivre.com.br/MLB-3927049001', 4, 5975.00, FALSE),
+(9, 'https://produto.mercadolivre.com.br/MLB-1943499077', 5, 417.55, FALSE);
 
 INSERT IGNORE INTO coworker_project (fk_coworker, fk_project, is_responsible) VALUES
 (2, 1, TRUE),

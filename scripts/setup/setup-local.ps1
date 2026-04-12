@@ -13,7 +13,7 @@ Get-Content .env | Foreach-Object {
 
 if ($env:GITHUB_ACCESS_TOKEN -and $env:GITHUB_USERNAME) {
     Write-Host "Realizando login no GitHub Packages..." -ForegroundColor Magenta
-    echo $env:GITHUB_ACCESS_TOKEN | docker login ghcr.io -u $env:GITHUB_USERNAME --password-stdin
+    Write-Output $env:GITHUB_ACCESS_TOKEN | docker login ghcr.io -u $env:GITHUB_USERNAME --password-stdin
 }
 
 Write-Host "Inicializando a base da infraestrutura (Redes e Bancos)..." -ForegroundColor Cyan
@@ -44,9 +44,30 @@ Write-Host "Inicializando o Nginx Proxy (entry point local)..." -ForegroundColor
 Set-Location ../proxy
 docker-compose --env-file ../../.env up -d
 
+Write-Host "Inicializando o Web Scrapping (execução a cada 24h)..." -ForegroundColor Cyan
+Set-Location ../web-scrapping
+docker-compose --env-file ../../.env up -d
+
 Set-Location ../../
-Write-Host "Deploy de todos os componentes locais finalizado!" -ForegroundColor Green
-Write-Host "  ➡️  Management:    http://localhost/ui/management" -ForegroundColor Green
-Write-Host "  ➡️  Institucional: http://localhost/ui/institucional" -ForegroundColor Green
-Write-Host "  ➡️  API:           http://localhost/api" -ForegroundColor Green
-Write-Host "  ➡️  Healthcheck:   http://localhost/health" -ForegroundColor Green
+Write-Host ""
+Write-Host "======================================================" -ForegroundColor DarkCyan
+Write-Host "  Deploy local finalizado!" -ForegroundColor Green
+Write-Host "======================================================" -ForegroundColor DarkCyan
+Write-Host ""
+Write-Host "  Interfaces de Usuário:"  -ForegroundColor White
+Write-Host "  ➡️  Management System:   http://localhost/" -ForegroundColor Green
+Write-Host "  ➡️  Site Institucional:  http://localhost/institucional" -ForegroundColor Green
+Write-Host ""
+Write-Host "  APIs e Serviços:"  -ForegroundColor White
+Write-Host "  ➡️  API Backend (REST):  http://localhost/api" -ForegroundColor Cyan
+Write-Host "  ➡️  Schedule Service:    http://localhost/schedule" -ForegroundColor Cyan
+Write-Host "  ➡️  Healthcheck Proxy:   http://localhost/health" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "  Bot WhatsApp:"  -ForegroundColor White
+Write-Host "  ➡️  n8n (fluxos):        http://localhost:5678" -ForegroundColor Yellow
+Write-Host "  ➡️  WAHA (dashboard):    http://localhost:3000/dashboard" -ForegroundColor Yellow
+Write-Host ""
+Write-Host "  Banco de Dados (acesso externo):"  -ForegroundColor White
+Write-Host "  ➡️  MySQL:               localhost:3307" -ForegroundColor DarkGray
+Write-Host "======================================================" -ForegroundColor DarkCyan
+Write-Host ""

@@ -1,0 +1,39 @@
+version: "3.8"
+
+# ==============================================================================
+# Serviço: Web Scrapping
+# Estratégia: O container foi projetado como um batch job (executa e termina).
+# Para execução a cada 24h dentro do Compose, o command é substituído por um
+# loop infinito que chama python -m src.main, aguarda 24h (86400s) e repete.
+# ==============================================================================
+
+services:
+  web-scrapping-scheduler:
+    image: ghcr.io/projeto-de-extensao-grupo-06/web-scrapping:latest
+    container_name: web-scrapping-scheduler
+    platform: linux/amd64
+    # Substituímos o CMD padrão por um loop que executa o batch a cada 24h.
+    # O entrypoint padrão do Python slim é /bin/sh, portanto usamos -c.
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        while true; do
+          echo "[web-scrapping] $(date '+%Y-%m-%d %H:%M:%S') - Iniciando raspagem..."
+          python -m src.main || echo "[web-scrapping] Erro na execucao. Retentando no proximo ciclo."
+          echo "[web-scrapping] $(date '+%Y-%m-%d %H:%M:%S') - Proxima execucao em 24h."
+          sleep 86400
+        done
+    environment:
+      DB_HOST: mysql-db
+      DB_PORT: 3306
+      DB_NAME: solarway
+      DB_USER: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+    restart: unless-stopped
+    networks:
+      - storage_network
+
+networks:
+  storage_network:
+    external: true
+    name: storage_network
