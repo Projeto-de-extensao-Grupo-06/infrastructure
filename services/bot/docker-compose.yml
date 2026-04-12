@@ -40,8 +40,7 @@ services:
     environment:
       BACKEND_API_URL: "${BACKEND_API_URL:-http://backend-service:8000}"
       WAHA_API_URL: "${WAHA_API_URL:-http://bot-waha:3000}"
-      WEBHOOK_URL: "${N8N_WEBHOOK_URL:-http://localhost:5678}"
-      N8N_HOST: localhost
+      WEBHOOK_URL: "${N8N_WEBHOOK_URL:-http://localhost:5678/}"
       GENERIC_TIMEZONE: America/Sao_Paulo
       N8N_LOG_LEVEL: debug
       N8N_SECURE_COOKIE: false

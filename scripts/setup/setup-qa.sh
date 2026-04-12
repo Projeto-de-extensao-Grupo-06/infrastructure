@@ -33,13 +33,22 @@ if [ -f "$BASE_DIR/.env" ]; then
 fi
 
 echo "🐳 [QA] Subindo pilha de serviços..."
-# Nota: Subindo em ordem: DB -> Backend -> Frontends
+# Ordem: DB -> Backend (Monolito + Micro) -> Bot -> Frontends -> Proxy -> Web Scrapping
 
-echo "➡️ [QA-DB] Iniciando Banco de Dados..."
+echo "➡️ [QA-DB] Iniciando Banco de Dados Primário e Redis..."
 cd "$BASE_DIR/services/db" && sudo docker compose --env-file ../../.env up -d
+
+echo "⏳ Aguardando 15s para inicialização do DB..."
+sleep 15
 
 echo "➡️ [QA-BACKEND] Iniciando Backend Monolito..."
 cd "$BASE_DIR/services/backend/monolith" && sudo docker compose --env-file ../../../.env up -d
+
+echo "➡️ [QA-BACKEND] Iniciando Microserviço de Agendamento..."
+cd "$BASE_DIR/services/backend/microservice" && sudo docker compose --env-file ../../../.env up -d
+
+echo "➡️ [QA-BOT] Iniciando Pilha de Automação (n8n + WAHA)..."
+cd "$BASE_DIR/services/bot" && sudo docker compose --env-file ../../.env up -d
 
 echo "➡️ [QA-FRONTEND] Iniciando Management System..."
 cd "$BASE_DIR/services/frontend/management-system" && sudo docker compose --env-file ../../../.env up -d
@@ -47,10 +56,10 @@ cd "$BASE_DIR/services/frontend/management-system" && sudo docker compose --env-
 echo "➡️ [QA-FRONTEND] Iniciando Institutional Website..."
 cd "$BASE_DIR/services/frontend/institucional-website" && sudo docker compose --env-file ../../../.env up -d
 
-echo "➡️ [QA-PROXY] Iniciando Proxy..."
+echo "➡️ [QA-PROXY] Iniciando Proxy Central..."
 cd "$BASE_DIR/services/proxy" && sudo docker compose --env-file ../../.env up -d
 
-echo "➡️ [QA-WEBSCRAPPING] Iniciando Web Scrapping (execução a cada 24h)..."
+echo "➡️ [QA-WEBSCRAPPING] Iniciando Job de Web Scrapping (24h)..."
 cd "$BASE_DIR/services/web-scrapping" && sudo docker compose --env-file ../../.env up -d
 
 PUBLIC_IP=$(curl -s ifconfig.me)
@@ -72,7 +81,7 @@ echo "  ➡️  Schedule Service:    http://$PUBLIC_IP/schedule"
 echo "  ➡️  Healthcheck Proxy:   http://$PUBLIC_IP/health"
 echo ""
 echo "  Bot WhatsApp:"
-echo "  ➡️  n8n (fluxos):        http://$PUBLIC_IP:5678"
-echo "  ➡️  WAHA (dashboard):    http://$PUBLIC_IP:3000/dashboard"
+echo "  ➡️  n8n (fluxos):        http://$PUBLIC_IP/n8n"
+echo "  ➡️  WAHA (dashboard):    http://$PUBLIC_IP/waha/dashboard"
 echo "======================================================"
 echo ""

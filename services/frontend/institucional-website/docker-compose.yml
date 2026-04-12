@@ -1,6 +1,6 @@
 services:
   institutional-website:
-    image: ghcr.io/projeto-de-extensao-grupo-06/institutional-website:latest
+    image: ghcr.io/projeto-de-extensao-grupo-06/institucional-website:latest
     container_name: institutional-website
     ports:
       - "${PORT_INSTITUTIONAL_WEBSITE:-8081}:80"

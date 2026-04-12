@@ -73,7 +73,7 @@ Os fluxos importados possuem dependências de serviços cujo acesso requer auten
    - Adicione sua respectiva API Key do Google Gemini, essencial para operações de NLP, extração de entidades e tomada de decisão sobre acionamento de ferramentas.
 
 3. **Conta WAHA:**
-   - URL Base: `http://waha:3000` (acessível via network `bot_network`)
+   - URL Base: `http://bot-waha:3000` (acessível via network `solarway_network`)
    - Configure credenciais básicas para comunicação entre n8n e WAHA.
 
 ### III. Provisão de Sessão no WhatsApp (WAHA)

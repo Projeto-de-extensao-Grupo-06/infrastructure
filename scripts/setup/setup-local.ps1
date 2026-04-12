@@ -64,8 +64,8 @@ Write-Host "  ➡️  Schedule Service:    http://localhost/schedule" -Foregroun
 Write-Host "  ➡️  Healthcheck Proxy:   http://localhost/health" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "  Bot WhatsApp:"  -ForegroundColor White
-Write-Host "  ➡️  n8n (fluxos):        http://localhost:5678" -ForegroundColor Yellow
-Write-Host "  ➡️  WAHA (dashboard):    http://localhost:3000/dashboard" -ForegroundColor Yellow
+Write-Host "  ➡️  n8n (fluxos):        http://localhost/n8n" -ForegroundColor Yellow
+Write-Host "  ➡️  WAHA (dashboard):    http://localhost/waha/dashboard" -ForegroundColor Yellow
 Write-Host ""
 Write-Host "  Banco de Dados (acesso externo):"  -ForegroundColor White
 Write-Host "  ➡️  MySQL:               localhost:3307" -ForegroundColor DarkGray

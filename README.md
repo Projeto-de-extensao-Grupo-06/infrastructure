@@ -61,26 +61,25 @@ O ponto de entrada único local é o **Nginx Proxy** na porta **80** (gerencial)
 
 | URL | Serviço | Container |
 |-----|---------|-----------|
-| `http://localhost/` | Management System (redirect) | `management-system` |
-| `http://localhost/ui/management` | Sistema Gerencial (painel) | `management-system` |
-| `http://localhost:81/` | Site Institucional | `institutional-website` |
-| `http://localhost:81/ui/institucional` | Site Institucional | `institutional-website` |
+| `http://localhost/` | Management System | `management-system` |
+| `http://localhost/institucional` | Site Institucional | `institutional-website` |
+| `http://localhost/api` | API REST do Backend | `backend-service` |
+| `http://localhost/schedule` | Schedule Notification | `schedule-notification` |
 | `http://localhost/health` | Healthcheck do Proxy Nginx | `nginx-proxy` |
 
 > [!NOTE]
-> Acessar `http://localhost/` redireciona automaticamente para `/ui/management`. A porta `81` **não passa pelo proxy central** em produção — é apenas para acesso local direto.
+> Todas as rotas passam pela **porta 80** — sem precisar especificar porta na URL. A porta 81 continua disponível como alias para o site institucional.
 
-### API Backend (acesso direto por porta)
+### Acesso direto por porta (host)
 
-| URL | Serviço | Container | Nota |
-|-----|---------|-----------|------|
-| `http://localhost:8000` | Backend Monolito (Spring Boot) | `backend-service` | Porta exposta por `PORT_BACKEND_MONOLITH` |
-| `http://localhost:8000/api` | Endpoints REST da API principal | `backend-service` | Base de todas as chamadas do frontend |
-| `http://localhost:8000/health` | Healthcheck do monolito | `backend-service` | |
-| `http://localhost:8082` | Schedule Notification (microserviço) | `schedule-notification` | Porta exposta por `PORT_BACKEND_MICROSERVICE` |
+| URL | Serviço | Container | Uso |
+|-----|---------|-----------|-----|
+| `http://localhost:8000/api` | Backend Monolito | `backend-service` | Acesso direto sem proxy (Postman, curl) |
+| `http://localhost:8082` | Schedule Notification | `schedule-notification` | Acesso direto sem proxy |
+| `http://localhost:3307` | MySQL | `mysql-db` | Clientes de BD externos (DBeaver, TablePlus) |
 
 > [!IMPORTANT]
-> O frontend acessa o backend **internamente** via `http://backend-service:8000` (DNS Docker). As portas acima são expostas apenas para acesso **externo do host** (ex: curl, Postman, testes).
+> Internamente (Docker), os containers se comunicam via nome do container: `http://backend-service:8000`. As portas acima são apenas para acesso **externo do host**.
 
 ### Banco de Dados e Cache
 
@@ -96,11 +95,13 @@ O ponto de entrada único local é o **Nginx Proxy** na porta **80** (gerencial)
 
 ### Bot WhatsApp (n8n + WAHA)
 
-| URL | Serviço | Container | Porta no host |
+| URL | Serviço | Container | Porta interna |
 |-----|---------|-----------|---------------|
-| `http://localhost:5678` | n8n (editor de fluxos) | `bot-n8n` | `PORT_N8N` (padrão: 5678) |
-| `http://localhost:3000` | WAHA (API WhatsApp) | `bot-waha` | `PORT_WAHA` (padrão: 3000) |
-| `http://localhost:3000/dashboard` | Dashboard WAHA | `bot-waha` | — |
+| `http://localhost/n8n` | n8n (editor de fluxos) | `bot-n8n` | 5678 |
+| `http://localhost/waha/dashboard` | WAHA (Dashboard) | `bot-waha` | 3000 |
+
+> [!NOTE]
+> Estes serviços agora são servidos através do proxy central. As portas expostas (`5678`, `3000`) continuam operacionais para acesso direto caso necessário.
 
 ### Web Scrapping (Job Batch)
 
@@ -121,23 +122,22 @@ No ambiente QA, todos os serviços rodam em **uma única VM EC2** (`t3.large`). 
 
 | URL | Serviço |
 |-----|---------|
-| `http://<IP_PUBLICO_QA>/` | Management System (redirect) |
-| `http://<IP_PUBLICO_QA>/ui/management` | Sistema Gerencial |
-| `http://<IP_PUBLICO_QA>/ui/institucional` | Site Institucional |
+| `http://<IP_PUBLICO_QA>/` | Management System |
+| `http://<IP_PUBLICO_QA>/institucional` | Site Institucional |
 | `http://<IP_PUBLICO_QA>/health` | Healthcheck do Proxy |
 
 ### API e Serviços (acesso direto por porta)
 
 | URL | Serviço |
 |-----|---------|
-| `http://<IP_PUBLICO_QA>:8000/api` | Backend Monolito — API REST |
-| `http://<IP_PUBLICO_QA>:8082` | Schedule Notification (microserviço) |
-| `http://<IP_PUBLICO_QA>:5678` | n8n (editor de fluxos WhatsApp) |
-| `http://<IP_PUBLICO_QA>:3000` | WAHA (API WhatsApp) |
-| `http://<IP_PUBLICO_QA>:3000/dashboard` | Dashboard WAHA |
+| `http://<IP_PUBLICO_QA>/api` | Backend Monolito — API REST (via proxy) |
+| `http://<IP_PUBLICO_QA>/schedule` | Schedule Notification (via proxy) |
+| `http://<IP_PUBLICO_QA>/n8n` | n8n (editor de fluxos WhatsApp) |
+| `http://<IP_PUBLICO_QA>/waha/dashboard` | Dashboard WAHA |
 
 > [!WARNING]
 > As portas de banco de dados (`3306`, `3307`) **não devem ser expostas** publicamente em QA. Acesse-as apenas via SSH tunneling: `ssh -L 3307:localhost:3307 ubuntu@<IP_PUBLICO_QA> -i solarway.pem`
+> O IP público é exibido automaticamente ao final da execução do `setup-qa.sh`.
 
 ---
 
