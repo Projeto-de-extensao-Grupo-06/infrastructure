@@ -37,5 +37,19 @@ variable "bucket_gold_name" {
 variable "key_name" {
   description = "Nome da chave SSH na AWS"
   type        = string
-  default     = "solarway"
+  default     = ""
+}
+
+variable "github_username" {
+  description = "Nome de usuário do GitHub"
+  type        = string
+  default     = ""
+  sensitive   = false
+}
+
+variable "github_token" {
+  description = "Token de acesso do GitHub"
+  type        = string
+  default     = ""
+  sensitive   = true
 }

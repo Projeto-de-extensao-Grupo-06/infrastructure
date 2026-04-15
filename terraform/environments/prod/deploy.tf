@@ -35,7 +35,7 @@ variable "bucket_name" {
 
 variable "key_name" {
   type    = string
-  default = "solarway"
+  default = ""
 }
 
 variable "github_username" {

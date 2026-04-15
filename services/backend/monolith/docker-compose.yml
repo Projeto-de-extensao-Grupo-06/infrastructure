@@ -31,7 +31,7 @@ services:
 
 networks:
   solarway_network:
-    external: true
+    driver: bridge
     name: solarway_network
   storage_network:
     external: true

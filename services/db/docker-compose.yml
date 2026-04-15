@@ -30,5 +30,5 @@ services:
 
 networks:
   storage_network:
-    external: true
+    driver: bridge
     name: storage_network

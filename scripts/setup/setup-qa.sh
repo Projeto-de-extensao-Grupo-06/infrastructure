@@ -41,7 +41,7 @@ cd "$BASE_DIR/services/db" && sudo docker compose --env-file ../../.env up -d
 echo "⏳ Aguardando 15s para inicialização do DB..."
 sleep 15
 
-echo "➡️ [QA-BACKEND] Iniciando Backend Monolito..."
+echo "➡️ [QA-BACKEND] Iniciando Backend Monolito (cria solarway_network)..."
 cd "$BASE_DIR/services/backend/monolith" && sudo docker compose --env-file ../../../.env up -d
 
 echo "➡️ [QA-BACKEND] Iniciando Microserviço de Agendamento..."
