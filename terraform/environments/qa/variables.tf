@@ -33,23 +33,3 @@ variable "bucket_gold_name" {
   type        = string
   default     = "solarway-datalake-gold"
 }
-
-variable "key_name" {
-  description = "Nome da chave SSH na AWS"
-  type        = string
-  default     = ""
-}
-
-variable "github_username" {
-  description = "Nome de usuário do GitHub"
-  type        = string
-  default     = ""
-  sensitive   = false
-}
-
-variable "github_token" {
-  description = "Token de acesso do GitHub"
-  type        = string
-  default     = ""
-  sensitive   = true
-}

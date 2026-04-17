@@ -25,5 +25,5 @@ output "public_route_table_id" {
 
 output "private_route_table_id" {
   description = "ID do Route Table Privado (Main por padrão neste mock)"
-  value       = aws_vpc.this.main_route_table_id
+  value       = aws_route_table.private.id
 }

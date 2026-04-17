@@ -34,12 +34,19 @@ services:
       - solarway_network
 
   n8n:
-    image: n8nio/n8n:latest
+    build: 
+      context: .
+      dockerfile: ./n8n/Dockerfile
     container_name: bot-n8n
     platform: linux/amd64
     environment:
       BACKEND_API_URL: "${BACKEND_API_URL:-http://backend-service:8000}"
       WAHA_API_URL: "${WAHA_API_URL:-http://bot-waha:3000}"
+      N8N_PROTOCOL: "${N8N_PROTOCOL:-http}"
+      N8N_HOST: "${N8N_HOST:-localhost}"
+      N8N_PORT: "${PORT_N8N:-5678}"
+      N8N_PATH: "/"
+      N8N_BASE_URL: "${N8N_BASE_URL:-http://localhost:5678/}"
       WEBHOOK_URL: "${N8N_WEBHOOK_URL:-http://localhost:5678/}"
       GENERIC_TIMEZONE: America/Sao_Paulo
       N8N_LOG_LEVEL: debug

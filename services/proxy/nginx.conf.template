@@ -14,7 +14,7 @@ http {
     sendfile      on;
     keepalive_timeout 65;
 
-    # ─── Upstream: IPs Privados da VPC AWS ────────────────────────────────────
+    # ─── Upstream: IPs Externos/VPC (Escalabilidade de Prod) ──────────────────
     upstream backend {
         server ${BACKEND_PRIVATE_IP}:8000;
     }
@@ -27,40 +27,58 @@ http {
         server ${INSTITUCIONAL_PRIVATE_IP}:8081;
     }
 
-    # ─── Servidor Principal ───────────────────────────────────────────────────
+    upstream n8n {
+        server ${N8N_PRIVATE_IP}:5678;
+    }
+
+    upstream waha {
+        server ${WAHA_PRIVATE_IP}:3000;
+    }
+
+    # Mapa para suporte a WebSockets (n8n editor)
+    map $http_upgrade $connection_upgrade {
+        default upgrade;
+        ''      close;
+    }
+
+    # ─── Servidor HTTP ────────────────────────────────────────────────────────
     server {
         listen 80;
-        server_name _;
+        server_name _; 
 
-        proxy_set_header Host              $host;
+        proxy_set_header Host              $http_host;
         proxy_set_header X-Real-IP         $remote_addr;
         proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
 
-        proxy_connect_timeout 60s;
-        proxy_send_timeout    60s;
-        proxy_read_timeout    60s;
+        # Otimização para n8n/WAHA/Websockets
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+        proxy_buffering off;
+        proxy_read_timeout 3600s;
 
         # ── API Backend ────────────────────────────────────────────────────
-        location /api {
+        location /api/ {
             proxy_pass http://backend/api/;
         }
 
-        # ── Management System ──────────────────────────────────────────────
-        location /ui/management {
-            proxy_pass http://frontend_management/;
-            proxy_redirect / /ui/management/;
-        }
+        # ── n8n e WAHA ─────────────────────────────────────────────────────
+        # Removidos para acesso direto via portas 5678 e 3000 (Baseline Step 1)
+        # location ^~ /n8n { ... }
+        # location ^~ /waha/ { ... }
 
         # ── Institucional Website ──────────────────────────────────────────
-        location /ui/institucional {
+        location ^~ /institucional/ {
             proxy_pass http://frontend_institucional/;
-            proxy_redirect / /ui/institucional/;
+            proxy_redirect / /institucional/;
         }
 
-        # ── Raiz ───────────────────────────────────────────────────────────
-        location = / {
-            return 302 /ui/management;
+        # ── Management System (ROOT) ──────────────────────────────────────
+        # Agora o root aceita apenas o que sobrou, garantindo que assets do n8n/waha
+        # que já foram prefixados não caiam aqui por erro.
+        location / {
+            proxy_pass http://frontend_management/;
         }
 
         # ── Healthcheck ────────────────────────────────────────────────────

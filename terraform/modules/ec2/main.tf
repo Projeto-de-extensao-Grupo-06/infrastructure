@@ -41,6 +41,7 @@ resource "aws_instance" "this" {
 
   iam_instance_profile = var.iam_instance_profile != "" ? var.iam_instance_profile : null
   user_data            = var.user_data != "" ? var.user_data : null
+  source_dest_check    = var.source_dest_check
 
   tags = {
     Name        = "solarway-ec2-${var.instance_name}-${var.environment}"

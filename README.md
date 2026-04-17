@@ -41,12 +41,12 @@ Abra um terminal na **raiz** deste diretório e execute o script apropriado ao s
 
 **Windows (PowerShell):**
 ```powershell
-.\scripts\setup\setup-local.ps1
+.\scripts\global\setup-local.ps1
 ```
 
 **Linux/Mac (Bash WSL):**
 ```bash
-./scripts/setup/setup-local.sh
+./scripts/global/setup-local.sh
 ```
 
 Isso subirá de uma só vez o MySQL, o Redis-Multidb, o Monolito do Spring Boot, os contêineres do Sistema de Gerenciamento, do Site Institucional, dos serviços nativos do WhatsApp IA e o scheduler de web scrapping.
@@ -97,11 +97,11 @@ O ponto de entrada único local é o **Nginx Proxy** na porta **80** (gerencial)
 
 | URL | Serviço | Container | Porta interna |
 |-----|---------|-----------|---------------|
-| `http://localhost/n8n` | n8n (editor de fluxos) | `bot-n8n` | 5678 |
-| `http://localhost/waha/dashboard` | WAHA (Dashboard) | `bot-waha` | 3000 |
+| `http://localhost:5678` | n8n (editor de fluxos) | `bot-n8n` | 5678 |
+| `http://localhost:3000/dashboard` | WAHA (Dashboard) | `bot-waha` | 3000 |
 
 > [!NOTE]
-> Estes serviços agora são servidos através do proxy central. As portas expostas (`5678`, `3000`) continuam operacionais para acesso direto caso necessário.
+> Estes serviços agora utilizam **Acesso Direto por Porta** para evitar problemas de MIME type. O redirecionamento no proxy central (porta 80) foi mantido para conveniência.
 
 ### Web Scrapping (Job Batch)
 
@@ -126,14 +126,14 @@ No ambiente QA, todos os serviços rodam em **uma única VM EC2** (`t3.large`). 
 | `http://<IP_PUBLICO_QA>/institucional` | Site Institucional |
 | `http://<IP_PUBLICO_QA>/health` | Healthcheck do Proxy |
 
-### API e Serviços (acesso direto por porta)
+### API e Serviços (Acesso Direto)
 
-| URL | Serviço |
-|-----|---------|
-| `http://<IP_PUBLICO_QA>/api` | Backend Monolito — API REST (via proxy) |
-| `http://<IP_PUBLICO_QA>/schedule` | Schedule Notification (via proxy) |
-| `http://<IP_PUBLICO_QA>/n8n` | n8n (editor de fluxos WhatsApp) |
-| `http://<IP_PUBLICO_QA>/waha/dashboard` | Dashboard WAHA |
+| URL | Serviço | Porta |
+|-----|---------|-------|
+| `http://<IP_PUBLICO_QA>/api` | Backend Monolito — API REST (via proxy) | 80 |
+| `http://<IP_PUBLICO_QA>/schedule` | Schedule Notification (via proxy) | 80 |
+| `http://<IP_PUBLICO_QA>:5678/` | n8n (editor de fluxos WhatsApp) | 5678 |
+| `http://<IP_PUBLICO_QA>:3000/dashboard` | Dashboard WAHA | 3000 |
 
 > [!WARNING]
 > As portas de banco de dados (`3306`, `3307`) **não devem ser expostas** publicamente em QA. Acesse-as apenas via SSH tunneling: `ssh -L 3307:localhost:3307 ubuntu@<IP_PUBLICO_QA> -i solarway.pem`
@@ -145,8 +145,8 @@ No ambiente QA, todos os serviços rodam em **uma única VM EC2** (`t3.large`). 
 
 Seguindo fidedignamente a arquitetura pulverizada da nuvem (onde sub-redes isolam frontends, backends e workers), a pasta `scripts/` detém gatilhos específicos de *User Data* para VMs isoladas:
 
-- **`scripts/setup/setup-qa.sh`**: Instala a infra inteira em uma única máquina Linux para rodadas de testes integrados.
-- **`scripts/prod/setup-[camada].sh`**: Cada arquivo deste atua nativamente ativando só a camada designada (`db`, `backend`, `frontend`, `bot`). 
+- **`terraform/environments/qa/scripts/setup-qa.sh`**: Instala a infra inteira em uma única máquina Linux para rodadas de testes integrados.
+- **`terraform/environments/prod/scripts/setup-[camada].sh`**: Cada arquivo deste atua nativamente ativando só a camada designada (`db`, `backend`, `frontend`, `bot`). 
   - **Diferenciação via Injeção**: Em produção, os scripts suportam as variáveis `FRONTEND_TYPE`, `BACKEND_TYPE` e `BOT_TYPE` para subir apenas o serviço específico daquela VM (ex: apenas Monolito ou apenas Website Institucional), otimizando recursos.
 
 
@@ -242,7 +242,7 @@ Para o ambiente de QA, o processo foi totalmente automatizado via Terraform. O s
 
 **Como rodar o deploy:**
 ```powershell
-.\scripts\deploy\deploy-qa.ps1
+.\terraform\environments\qa\scripts\deploy-qa.ps1
 ```
 
 > [!NOTE]

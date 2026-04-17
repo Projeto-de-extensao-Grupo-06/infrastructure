@@ -34,118 +34,158 @@ module "vpc_prod" {
 module "ec2_nginx" {
   source = "../../modules/ec2"
 
-  environment    = "prod"
-  instance_name  = "nginx-proxy"
-  instance_type  = "t3.small"
-  vpc_id         = module.vpc_prod.vpc_id
-  subnet_id      = module.vpc_prod.public_subnet_ids[0]
-  key_name       = var.key_name
-  frontend_ports = [22, 80, 443]
-  user_data      = "${file("../../../scripts/setup/setup-vm.sh")}\n${file("../../../scripts/setup/prod/setup-proxy.sh")}"
+  environment          = "prod"
+  instance_name        = "nginx-proxy"
+  instance_type        = "t3.small"
+  vpc_id               = module.vpc_prod.vpc_id
+  subnet_id            = module.vpc_prod.public_subnet_ids[0]
+  frontend_ports       = [80, 443]
+  iam_instance_profile = "LabInstanceProfile"
+  source_dest_check    = false
+
+  user_data = <<-EOT
+    #!/bin/bash
+    set -e
+    export DEBIAN_FRONTEND=noninteractive
+    mkdir -p /tmp/solarway/services/proxy
+    mkdir -p /tmp/solarway/scripts/setup/prod
+
+    # Docker config
+    base64 -d << 'EOF' > /tmp/solarway/services/proxy/docker-compose.yml
+    ${base64encode(file("../../../services/proxy/docker-compose.yml"))}
+    EOF
+
+    cat << 'EOF' > /tmp/solarway/services/proxy/nginx.conf.template
+    ${file("../../../services/proxy/nginx.conf.template")}
+    EOF
+
+    # Runtime Env
+    cat << EOF > /tmp/solarway/.env
+    BACKEND_PRIVATE_IP=${module.ec2_backend_1.private_ip}
+    MANAGEMENT_PRIVATE_IP=${module.ec2_frontend_2.private_ip}
+    INSTITUCIONAL_PRIVATE_IP=${module.ec2_frontend_1.private_ip}
+    DOMAIN=solarway.test
+    EMAIL=admin@solarway.test
+    EOF
+
+    # Scripts
+    cat << 'EOF' > /tmp/solarway/scripts/setup/setup-vm.sh
+    ${file("../../../scripts/setup-vm.sh")}
+    EOF
+
+    cat << 'EOF' > /tmp/solarway/scripts/setup/prod/setup-proxy.sh
+    ${file("./scripts/setup-proxy.sh")}
+    EOF
+
+    find /tmp/solarway -type f -name "*.sh" -exec sed -i 's/\r$//' {} +
+    chmod +x /tmp/solarway/scripts/setup/setup-vm.sh /tmp/solarway/scripts/setup/prod/setup-proxy.sh
+    
+    sudo bash /tmp/solarway/scripts/setup/prod/setup-proxy.sh
+  EOT
+}
+
+resource "aws_route" "private_nat_access" {
+  route_table_id         = module.vpc_prod.private_route_table_id
+  destination_cidr_block = "0.0.0.0/0"
+  network_interface_id   = module.ec2_nginx.primary_network_interface_id
 }
 
 module "ec2_frontend_1" {
   source = "../../modules/ec2"
 
-  environment    = "prod"
-  instance_name  = "frontend-1"
-  instance_type  = "t3.small"
-  vpc_id         = module.vpc_prod.vpc_id
-  subnet_id      = module.vpc_prod.private_subnet_ids[0]
-  key_name       = var.key_name
-  frontend_ports = [22, 8081] # Apenas Institucional Website
+  environment          = "prod"
+  instance_name        = "frontend-1"
+  instance_type        = "t3.small"
+  vpc_id               = module.vpc_prod.vpc_id
+  subnet_id            = module.vpc_prod.private_subnet_ids[0]
+  frontend_ports       = [8081] # Apenas Institucional Website
   allowed_cidr_blocks  = ["10.0.0.0/24"]
   iam_instance_profile = "LabInstanceProfile"
-  user_data            = "${file("../../../scripts/setup/setup-vm.sh")}\n${replace(file("../../../scripts/setup/prod/setup-frontend.sh"), "#!/bin/bash", "export FRONTEND_TYPE=\"institutional\"")}"
+  user_data            = "${file("../../../scripts/setup-vm.sh")}\n${replace(file("./scripts/setup-frontend.sh"), "#!/bin/bash", "export FRONTEND_TYPE=\"institutional\"")}"
 }
 
 module "ec2_frontend_2" {
   source = "../../modules/ec2"
 
-  environment    = "prod"
-  instance_name  = "frontend-2"
-  instance_type  = "t3.small"
-  vpc_id         = module.vpc_prod.vpc_id
-  subnet_id      = module.vpc_prod.private_subnet_ids[0]
-  key_name       = var.key_name
-  frontend_ports = [22, 8080] # Apenas Management System
+  environment          = "prod"
+  instance_name        = "frontend-2"
+  instance_type        = "t3.small"
+  vpc_id               = module.vpc_prod.vpc_id
+  subnet_id            = module.vpc_prod.private_subnet_ids[0]
+  frontend_ports       = [8080] # Apenas Management System
   allowed_cidr_blocks  = ["10.0.0.0/24"]
   iam_instance_profile = "LabInstanceProfile"
-  user_data            = "${file("../../../scripts/setup/setup-vm.sh")}\n${replace(file("../../../scripts/setup/prod/setup-frontend.sh"), "#!/bin/bash", "export FRONTEND_TYPE=\"management\"")}"
+  user_data            = "${file("../../../scripts/setup-vm.sh")}\n${replace(file("./scripts/setup-frontend.sh"), "#!/bin/bash", "export FRONTEND_TYPE=\"management\"")}"
 }
 
 module "ec2_backend_1" {
   source = "../../modules/ec2"
 
-  environment    = "prod"
-  instance_name  = "backend-1"
-  instance_type  = "t3.medium"
-  vpc_id         = module.vpc_prod.vpc_id
-  subnet_id      = module.vpc_prod.private_subnet_ids[1]
-  key_name       = var.key_name
-  frontend_ports = [22, 8000] # Apenas Monolito
+  environment          = "prod"
+  instance_name        = "backend-1"
+  instance_type        = "t3.medium"
+  vpc_id               = module.vpc_prod.vpc_id
+  subnet_id            = module.vpc_prod.private_subnet_ids[1]
+  frontend_ports       = [8000] # Apenas Monolito
   allowed_cidr_blocks  = ["10.0.0.0/24"]
   iam_instance_profile = "LabInstanceProfile"
-  user_data            = "${file("../../../scripts/setup/setup-vm.sh")}\n${replace(file("../../../scripts/setup/prod/setup-backend.sh"), "#!/bin/bash", "export BACKEND_TYPE=\"monolith\"")}"
+  user_data            = "${file("../../../scripts/setup-vm.sh")}\n${replace(file("./scripts/setup-backend.sh"), "#!/bin/bash", "export BACKEND_TYPE=\"monolith\"")}"
 }
 
 module "ec2_backend_2" {
   source = "../../modules/ec2"
 
-  environment    = "prod"
-  instance_name  = "backend-2"
-  instance_type  = "t3.medium"
-  vpc_id         = module.vpc_prod.vpc_id
-  subnet_id      = module.vpc_prod.private_subnet_ids[1]
-  key_name       = var.key_name
-  frontend_ports = [22, 8082] # Apenas Microserviço
+  environment          = "prod"
+  instance_name        = "backend-2"
+  instance_type        = "t3.medium"
+  vpc_id               = module.vpc_prod.vpc_id
+  subnet_id            = module.vpc_prod.private_subnet_ids[1]
+  frontend_ports       = [8082] # Apenas Microserviço
   allowed_cidr_blocks  = ["10.0.0.0/24"]
   iam_instance_profile = "LabInstanceProfile"
-  user_data            = "${file("../../../scripts/setup/setup-vm.sh")}\n${replace(file("../../../scripts/setup/prod/setup-backend.sh"), "#!/bin/bash", "export BACKEND_TYPE=\"microservice\"")}"
+  user_data            = "${file("../../../scripts/setup-vm.sh")}\n${replace(file("./scripts/setup-backend.sh"), "#!/bin/bash", "export BACKEND_TYPE=\"microservice\"")}"
 }
 
 module "ec2_chatbot" {
   source = "../../modules/ec2"
 
-  environment    = "prod"
-  instance_name  = "chatbot"
-  instance_type  = "t3.small"
-  vpc_id         = module.vpc_prod.vpc_id
-  subnet_id      = module.vpc_prod.private_subnet_ids[3]
-  key_name       = var.key_name
-  frontend_ports = [22, 3000, 5678]
+  environment          = "prod"
+  instance_name        = "chatbot"
+  instance_type        = "t3.small"
+  vpc_id               = module.vpc_prod.vpc_id
+  subnet_id            = module.vpc_prod.private_subnet_ids[3]
+  frontend_ports       = [3000, 5678]
   allowed_cidr_blocks  = ["10.0.0.0/24"]
   iam_instance_profile = "LabInstanceProfile"
-  user_data            = "${file("../../../scripts/setup/setup-vm.sh")}\n${replace(file("../../../scripts/setup/prod/setup-bot.sh"), "#!/bin/bash", "export BOT_TYPE=\"chatbot\"")}"
+  user_data            = "${file("../../../scripts/setup-vm.sh")}\n${replace(file("./scripts/setup-bot.sh"), "#!/bin/bash", "export BOT_TYPE=\"chatbot\"")}"
 }
 
 module "ec2_webscraping" {
   source = "../../modules/ec2"
 
-  environment    = "prod"
-  instance_name  = "webscraping"
-  instance_type  = "t3.micro"
-  vpc_id         = module.vpc_prod.vpc_id
-  subnet_id      = module.vpc_prod.private_subnet_ids[3]
-  key_name       = var.key_name
-  frontend_ports = [22, 5000]
+  environment          = "prod"
+  instance_name        = "webscraping"
+  instance_type        = "t3.micro"
+  vpc_id               = module.vpc_prod.vpc_id
+  subnet_id            = module.vpc_prod.private_subnet_ids[3]
+  frontend_ports       = [5000]
   allowed_cidr_blocks  = ["10.0.0.0/24"]
   iam_instance_profile = "LabInstanceProfile"
-  user_data            = "${file("../../../scripts/setup/setup-vm.sh")}\n${replace(file("../../../scripts/setup/prod/setup-bot.sh"), "#!/bin/bash", "export BOT_TYPE=\"webscraping\"")}"
+  user_data            = "${file("../../../scripts/setup-vm.sh")}\n${replace(file("./scripts/setup-bot.sh"), "#!/bin/bash", "export BOT_TYPE=\"webscraping\"")}"
 }
 
 module "ec2_db" {
   source = "../../modules/ec2"
 
-  environment    = "prod"
-  instance_name  = "database"
-  instance_type  = "t3.large"
-  vpc_id         = module.vpc_prod.vpc_id
-  subnet_id      = module.vpc_prod.private_subnet_ids[2]
-  key_name       = var.key_name
-  frontend_ports = [22, 3306, 6379]
-  allowed_cidr_blocks = ["10.0.0.0/24"]
-  user_data      = "${file("../../../scripts/setup/setup-vm.sh")}\n${file("../../../scripts/setup/prod/setup-db.sh")}"
+  environment          = "prod"
+  instance_name        = "database"
+  instance_type        = "t3.large"
+  vpc_id               = module.vpc_prod.vpc_id
+  subnet_id            = module.vpc_prod.private_subnet_ids[2]
+  frontend_ports       = [3306, 6379]
+  allowed_cidr_blocks  = ["10.0.0.0/24"]
+  iam_instance_profile = "LabInstanceProfile"
+  user_data            = "${file("../../../scripts/setup-vm.sh")}\n${file("./scripts/setup-db.sh")}"
 }
 
 output "nginx_public_ip" {
@@ -153,9 +193,9 @@ output "nginx_public_ip" {
   value       = module.ec2_nginx.public_ip
 }
 
-output "nginx_ssh" {
-  description = "SSH para o Nginx"
-  value       = "ssh -i ${var.key_name}.pem ubuntu@${module.ec2_nginx.public_ip}"
+output "nginx_ssm_connect" {
+  description = "Comando para conectar no Nginx Proxy via SSM"
+  value       = "aws ssm start-session --target ${module.ec2_nginx.instance_id}"
 }
 
 output "backend_private_ip" {
@@ -171,69 +211,6 @@ output "management_private_ip" {
 output "institucional_private_ip" {
   description = "IP Privado do Frontend Institucional Website (para o Nginx)"
   value       = module.ec2_frontend_1.private_ip
-}
-
-resource "null_resource" "nginx_deploy" {
-  triggers = {
-    nginx_id           = module.ec2_nginx.instance_id
-    backend_ip         = module.ec2_backend_1.private_ip
-    management_ip      = module.ec2_frontend_2.private_ip
-    institucional_ip   = module.ec2_frontend_1.private_ip
-    setup_proxy_hash   = filemd5("../../../scripts/setup/prod/setup-proxy.sh")
-    nginx_conf_hash    = filemd5("../../../services/proxy/nginx.conf.template")
-  }
-
-  connection {
-    type        = "ssh"
-    user        = "ubuntu"
-    private_key = file("${path.module}/../../../${var.key_name}.pem")
-    host        = module.ec2_nginx.public_ip
-  }
-
-  # Preparar estrutura no /tmp
-  provisioner "remote-exec" {
-    inline = [
-      "mkdir -p /tmp/solarway/services/proxy",
-      "mkdir -p /tmp/solarway/scripts/setup/prod"
-    ]
-  }
-
-  # Transferir arquivos do proxy
-  provisioner "file" {
-    source      = "../../../services/proxy/docker-compose.yml"
-    destination = "/tmp/solarway/services/proxy/docker-compose.yml"
-  }
-
-  provisioner "file" {
-    source      = "../../../services/proxy/nginx.conf.template"
-    destination = "/tmp/solarway/services/proxy/nginx.conf.template"
-  }
-
-  # Transferir scripts
-  provisioner "file" {
-    source      = "../../../scripts/setup/setup-vm.sh"
-    destination = "/tmp/solarway/scripts/setup/setup-vm.sh"
-  }
-
-  provisioner "file" {
-    source      = "../../../scripts/setup/prod/setup-proxy.sh"
-    destination = "/tmp/solarway/scripts/setup/prod/setup-proxy.sh"
-  }
-
-  provisioner "remote-exec" {
-    inline = [
-      "echo 'BACKEND_PRIVATE_IP=${module.ec2_backend_1.private_ip}' >> /tmp/solarway/.env",
-      "echo 'MANAGEMENT_PRIVATE_IP=${module.ec2_frontend_2.private_ip}' >> /tmp/solarway/.env",
-      "echo 'INSTITUCIONAL_PRIVATE_IP=${module.ec2_frontend_1.private_ip}' >> /tmp/solarway/.env",
-      "sed -i 's/\\r$//' /tmp/solarway/scripts/setup/setup-vm.sh",
-      "sed -i 's/\\r$//' /tmp/solarway/scripts/setup/prod/setup-proxy.sh",
-      "chmod +x /tmp/solarway/scripts/setup/setup-vm.sh",
-      "chmod +x /tmp/solarway/scripts/setup/prod/setup-proxy.sh",
-      "sudo bash /tmp/solarway/scripts/setup/prod/setup-proxy.sh",
-      "echo '\u2705 Nginx Proxy configurado! Healthcheck: '",
-      "curl -sf http://localhost/health || echo 'Aguarde o container iniciar...'"
-    ]
-  }
 }
 
 module "s3_raw" {

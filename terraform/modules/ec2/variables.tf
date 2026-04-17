@@ -60,3 +60,9 @@ variable "iam_instance_profile" {
   type        = string
   default     = ""
 }
+
+variable "source_dest_check" {
+  description = "Define controle de roteamento da rede na placa (desligar para NAT)"
+  type        = bool
+  default     = true
+}
