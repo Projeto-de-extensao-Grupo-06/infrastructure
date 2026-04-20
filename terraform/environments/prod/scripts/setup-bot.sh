@@ -1,35 +1,87 @@
 #!/bin/bash
-# TODO - Testar budega de script
 # ==============================================================================
 # Ambiente: PRODUÇÃO
-# Camada: Bot EC2 (WhatsApp Waha & n8n / Webscraping)
-# Objetivo: Bootstrap nativo focado nas engine de bots escaláveis da AWS
+# Camada: Bot EC2 (WhatsApp WAHA & n8n / Webscraping)
+# Objetivo: Bootstrap das engines de bot e webscraping.
+# Dependências: setup-vm.sh deve ter sido executado antes.
+#
+# IMPORTANTE: Em PROD, o bot roda em instância SEPARADA do backend.
+# A comunicação com o backend é feita via IP PRIVADO da VPC (não hostname Docker).
+# O BACKEND_API_URL é injetado pelo SSM Association (env.bot.tmpl) com o IP real.
 # ==============================================================================
 set -e
+
 if [ "$EUID" -eq 0 ]; then
-    exec > >(tee /var/log/user-data-prod-bot.log|logger -t user-data -s 2>/dev/console) 2>&1
+    LOG_FILE="/var/log/solarway-setup.log"
+    exec > >(tee -a "$LOG_FILE"|logger -t user-data -s 2>/dev/console) 2>&1
     export DEBIAN_FRONTEND=noninteractive
 fi
 
-echo "➡️ [PROD-BOT] Configurando Código..."
-sudo su - "$TARGET_USER" -c "
-  BASE_DIR="/tmp/solarway"
-  cd "$BASE_DIR"
-  echo 'Aguardando Docker daemon...'
-  while ! docker info >/dev/null 2>&1; do sleep 2; done
+echo "âž¡ï¸ [PROD-BOT] Iniciando Bootstrap (BOT_TYPE=$BOT_TYPE)..."
+echo "ðŸ“‚ Diretorio atual: $(pwd)"
+echo "ðŸ“„ Arquivos em $(pwd):"
+ls -la
 
-  # Diferenciação de apps baseada em variável de ambiente (BOT_TYPE)
-  if [[ "$BOT_TYPE" == "chatbot" || -z "$BOT_TYPE" ]]; then
-    echo "➡️ [PROD-BOT] Iniciando Chatbot Stack (n8n, WAHA, Redis)..."
-    cd services/bot
-    docker compose pull
-    docker compose --env-file ../../.env up -d
-    cd ../..
-  fi
 
-  if [[ "$BOT_TYPE" == "webscraping" ]]; then
-    echo "➡️ [PROD-BOT] Camada de Webscraping detectada. (Aguardando configuração de serviço em services/webscraping)"
-    # cd services/webscraping && docker compose up -d
-  fi
-"
-echo "✅ [PROD-BOT] Provisionamento Finalizado!"
+BASE_DIR="/tmp/solarway"
+
+if [ ! -d "$BASE_DIR" ]; then
+    echo "Erro: Diretório $BASE_DIR não encontrado. setup-vm.sh rodou?"
+    exit 1
+fi
+
+cd "$BASE_DIR"
+
+echo "[PROD-BOT] Aguardando Docker daemon..."
+for i in {1..150}; do
+    if sudo docker info > /dev/null 2>&1; then
+        echo "Docker pronto!"
+        break
+    fi
+    echo "Docker nÃ£o pronto, tentativa $i/30..."
+    sleep 4
+done
+
+# Login no GHCR
+if [ -f .env ]; then
+    export $(grep -v '^#' .env | xargs)
+    if [ -n "$GITHUB_ACCESS_TOKEN" ]; then
+        echo "$GITHUB_ACCESS_TOKEN" | sudo docker login ghcr.io -u "$GITHUB_USERNAME" --password-stdin
+    fi
+fi
+
+# Chatbot Stack (n8n + WAHA + Redis)
+sudo docker network create solarway_network 2>/dev/null || true
+if [[ "$BOT_TYPE" == "chatbot" || -z "$BOT_TYPE" ]]; then
+    echo "[PROD-BOT] Iniciando Chatbot Stack (n8n + WAHA + Redis)..."
+    if [ -d "services/bot" ]; then
+        cd services/bot
+        sudo docker compose pull
+        # Usa o .env injetado via SSM (BACKEND_API_URL contÃ©m o IP privado real do backend)
+        sudo docker compose --env-file ../../.env up -d
+        cd ../..
+        echo "[PROD-BOT] Chatbot Stack iniciada!"
+        echo "   n8n:  http://$(hostname -I | awk '{print $1}'):5678"
+        echo "   WAHA: http://$(hostname -I | awk '{print $1}'):3000/dashboard"
+    else
+        echo "Erro: services/bot nÃ£o encontrado!"
+        exit 1
+    fi
+fi
+
+# Web Scrapping (Job Batch)
+if [[ "$BOT_TYPE" == "webscraping" ]]; then
+    echo "[PROD-BOT] Iniciando Web Scrapping Job..."
+    if [ -d "services/web-scrapping" ]; then
+        cd services/web-scrapping
+        sudo docker compose pull
+        sudo docker compose --env-file ../../.env up -d
+        cd ../..
+        echo "[PROD-BOT] Web Scrapping Job iniciado!"
+    else
+        echo "Erro: services/web-scrapping nÃ£o encontrado!"
+        exit 1
+    fi
+fi
+
+echo "[PROD-BOT] Provisionamento Finalizado! (BOT_TYPE=$BOT_TYPE)"

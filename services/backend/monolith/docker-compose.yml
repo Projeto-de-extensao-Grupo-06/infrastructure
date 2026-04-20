@@ -7,14 +7,14 @@ services:
     container_name: backend-service
     environment:
       SPRING_PROFILES_ACTIVE: prod
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/solarway?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_URL: jdbc:mysql://${DB_HOST:-mysql-db}:3306/solarway?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      SPRING_DATA_REDIS_HOST: redis-multidb
+      SPRING_DATA_REDIS_HOST: ${REDIS_HOST:-redis-multidb}
       SPRING_DATA_REDIS_PORT: 6379
       EMAIL: "${EMAIL}"
-      PASSWORD_EMAIL: "${PASSWORD_EMAIL}"
+      EMAIL_PASSWORD: "${EMAIL_PASSWORD}"
       SERVER_PORT: 8000
       BOT_SECRET: "${BOT_SECRET}"
       SOLARIZE_SECURITY_BOT_SECRET: "${BOT_SECRET}"
@@ -31,8 +31,9 @@ services:
 
 networks:
   solarway_network:
-    driver: bridge
+    external: true
     name: solarway_network
   storage_network:
     external: true
     name: storage_network
+

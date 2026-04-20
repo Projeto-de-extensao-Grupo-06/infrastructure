@@ -10,12 +10,31 @@ A stack utiliza:
 
 ---
 
-## 1. Configuração de Ambiente
+## Variáveis de Ambiente
 
-As seguintes variáveis de ambiente essenciais estão declaradas no `docker-compose.yml`:
+> Todas as variáveis abaixo devem estar no `.env` na raiz do repositório de infra. Consulte o [VARIABLES_REFERENCE.md](../../docs/VARIABLES_REFERENCE.md) para detalhes completos.
 
-- `BACKEND_API_URL`: Mapeada como `http://backend-service:8000`. Graças ao DNS nativo da engine interligada na `solarway_network`, o n8n se comunica com o Spring Boot pelo nome direto do contêiner, reduzindo o uso obsoleto do localhost do host limitante.
-- `BOT_SECRET`: Chave criptográfica simétrica para autenticação nos endpoints da API central.
+| Variável | Obrig. | Padrão | Descrição |
+|----------|:------:|--------|-----------|
+| `BOT_SECRET` | 🔴 | — | Chave simétrica para autenticar o bot no backend |
+| `BACKEND_API_URL` | 🟢 | `http://backend-service:8000` | URL interna do backend (rede Docker) |
+| `WAHA_API_URL` | 🟢 | `http://bot-waha:3000` | URL interna do WAHA (rede Docker) |
+| `N8N_PROTOCOL` | 🟢 | `http` | Protocolo do n8n |
+| `N8N_HOST` | 🟡 | `localhost` | Host público do n8n (muda em QA/Prod) |
+| `N8N_PORT` | 🟢 | `5678` | Porta interna do n8n |
+| `N8N_BASE_URL` | 🟡 | `http://localhost:5678/` | URL base (sobrescrita pelo bootstrap QA) |
+| `N8N_WEBHOOK_URL` | 🟡 | `http://localhost:5678/` | URL de webhooks (sobrescrita pelo bootstrap QA) |
+| `WHATSAPP_HOOK_URL` | 🟡 | `http://bot-n8n:5678/webhook/webhook` | URL para onde o WAHA envia eventos |
+| `WHATSAPP_DEFAULT_ENGINE` | 🟢 | `GOWS` | Engine do WAHA |
+| `WHATSAPP_HOOK_EVENTS` | 🟢 | `message` | Eventos enviados ao webhook |
+| `WAHA_NO_API_KEY` | 🟢 | `true` | Desabilita auth por API key |
+| `WAHA_DASHBOARD_NO_PASSWORD` | 🟡 | `true` | ⚠️ Deve ser `false` em produção |
+| `WHATSAPP_SWAGGER_NO_PASSWORD` | 🟡 | `true` | ⚠️ Deve ser `false` em produção |
+| `PORT_N8N` | 🟢 | `5678` | Porta externa do n8n |
+| `PORT_WAHA` | 🟢 | `3000` | Porta externa do WAHA |
+| `PORT_BOT_REDIS` | 🟢 | `6380` | Porta externa do Redis do Bot |
+| `REDIS_USER` | 🟢 | `default` | Usuário do Redis do Bot |
+| `REDIS_PASSWORD` | 🟡 | `default` | Senha do Redis do Bot |
 
 ## Como Atualizar Imagens (GitHub Packages)
 
@@ -28,7 +47,7 @@ Embora este módulo utilize imagens oficiais, a infraestrutura segue a estratég
    ```
 
 2. **Imagens Utilizadas**:
-   As imagens são baixadas automaticamente via `docker-compose pull` ou `up`:
+   As imagens são baixadas automaticamente via `docker compose pull` ou `up`:
    - `devlikeapro/waha:latest`
    - `n8nio/n8n:latest`
    - `redis:latest`
@@ -42,7 +61,7 @@ Embora este módulo utilize imagens oficiais, a infraestrutura segue a estratég
 Para provisionar o ambiente do bot, abra o terminal neste diretório e instancie os contêineres:
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 ---

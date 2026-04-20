@@ -14,5 +14,6 @@ services:
 
 networks:
   solarway_network:
-    name: solarway_network
     external: true
+    name: solarway_network
+

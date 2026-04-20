@@ -24,9 +24,9 @@ services:
           sleep 86400
         done
     environment:
-      DB_HOST: mysql-db
-      DB_PORT: 3306
-      DB_NAME: solarway
+      DB_HOST: ${DB_HOST:-mysql-db}
+      DB_PORT: ${DB_PORT:-3306}
+      DB_NAME: ${DB_NAME:-solarway}
       DB_USER: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
     restart: unless-stopped

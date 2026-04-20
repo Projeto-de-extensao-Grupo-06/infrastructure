@@ -1,18 +1,15 @@
 # deploy-prod.ps1
-# Script para deploy automatizado no ambiente de PRODUÇÃO do SolarWay
-# Uso: .\scripts\deploy\deploy-prod.ps1
-#
-# Todas as credenciais são lidas do .env local.
-# NÃO é necessário passar -var na linha de comando.
+# Script para deploy automatizado no ambiente de PRODUCAO do SolarWay
+# Uso: .\scripts\deploy-prod.ps1
 
 $ErrorActionPreference = "Stop"
 
 $OriginalPath = Get-Location
 $DotEnvPath = Join-Path $PSScriptRoot "../../../../.env"
 
-# ── Carregar todas as variáveis do .env ──────────────────────────────────────
+# -- Carregar todas as variaveis do .env --------------------------------------
 if (-not (Test-Path $DotEnvPath)) {
-    throw "Arquivo .env não encontrado em: $DotEnvPath"
+    throw "Arquivo .env nao encontrado em: $DotEnvPath"
 }
 
 $envVars = @{}
@@ -22,43 +19,169 @@ Get-Content $DotEnvPath | ForEach-Object {
     }
 }
 
-# ── Mapear variáveis necessárias para os módulos Terraform (deploy.tf) ───────
+# -- Mapear variaveis necessarias para os modulos Terraform (deploy.tf) -------
 $TF_VARS = @{
     "db_password"    = $envVars["DB_PASSWORD"]
-    "redis_password" = "default"
+    "db_username"    = $envVars["DB_USERNAME"]
+    "redis_password" = $envVars["REDIS_PASSWORD"]
+    "redis_user"     = if ($envVars.ContainsKey("REDIS_USER")) { $envVars["REDIS_USER"] } else { "default" }
     "bot_secret"     = $envVars["BOT_SECRET"]
     "email"          = $envVars["EMAIL"]
-    "email_password" = $envVars["PASSWORD_EMAIL"]
+    "email_password" = $envVars["EMAIL_PASSWORD"]
     "bucket_name"    = $envVars["BUCKET_NAME"]
     "github_username"= $envVars["GITHUB_USERNAME"]
     "github_token"   = $envVars["GITHUB_ACCESS_TOKEN"]
+    "domain"         = if ($envVars.ContainsKey("DOMAIN")) { $envVars["DOMAIN"] } else { "solarway.test" }
 }
+
 
 $varArgs = $TF_VARS.GetEnumerator() | ForEach-Object { "-var=`"$($_.Key)=$($_.Value)`"" }
 
-# ── Terraform Apply em PROD ──────────────────────────────────────────────────
+# -- Terraform Init ------------------------------------------------------------
 Write-Host "[DEPLOY - PROD] Inicializando Terraform..." -ForegroundColor Cyan
 Set-Location (Join-Path $PSScriptRoot "..")
 
 terraform init -reconfigure
+if ($LASTEXITCODE -ne 0) {
+    Set-Location $OriginalPath
+    throw "Erro no terraform init."
+}
+
+# -- Terraform Validate --------------------------------------------------------
+Write-Host ""
+Write-Host "[DEPLOY - PROD] Validando configuracao..." -ForegroundColor Cyan
+terraform validate
+if ($LASTEXITCODE -ne 0) {
+    Set-Location $OriginalPath
+    throw "Erro no terraform validate."
+}
+Write-Host "  Validacao OK!" -ForegroundColor Green
+
+# -- Terraform Plan ------------------------------------------------------------
+Write-Host ""
+Write-Host "[DEPLOY - PROD] Executando terraform plan..." -ForegroundColor Cyan
+terraform plan -detailed-exitcode @varArgs
+$planExit = $LASTEXITCODE
+
+if ($planExit -eq 1) {
+    Set-Location $OriginalPath
+    throw "Erro no terraform plan."
+}
+
+if ($planExit -eq 0) {
+    Write-Host "  Nenhuma mudanca detectada. Infra ja esta atualizada." -ForegroundColor Green
+    Set-Location $OriginalPath
+    exit 0
+}
+
+# planExit -eq 2 -> ha mudancas para aplicar
+Write-Host ""
+$confirm = Read-Host "[DEPLOY - PROD] Deseja aplicar as mudancas acima? (s/N)"
+if ($confirm -notin @("s", "S", "sim", "Sim")) {
+    Write-Host "  Deploy cancelado pelo usuario." -ForegroundColor Yellow
+    Set-Location $OriginalPath
+    exit 0
+}
+
+# -- Terraform Apply -----------------------------------------------------------
+Write-Host ""
+Write-Host "[DEPLOY - PROD] Aplicando infra..." -ForegroundColor Cyan
 terraform apply -auto-approve @varArgs
 
 if ($LASTEXITCODE -ne 0) {
     Set-Location $OriginalPath
-    throw "Erro ao executar terraform apply. Verifique os logs acima."
+    throw "Erro no terraform apply."
 }
 
-# ── Output final ─────────────────────────────────────────────────────────────
-$NGINX_IP = terraform output -raw nginx_public_ip 2>$null
-$SSM_CMD  = terraform output -raw nginx_ssm_connect 2>$null
+# -- Output final --------------------------------------------------------------
+function Get-TFOutput($name) {
+    $val = terraform output -raw $name 2>$null
+    if ($val) { return $val } else { return "(unavailable)" }
+}
+
+$NGINX_IP  = Get-TFOutput "nginx_public_ip"
+$NGINX_SSM = Get-TFOutput "nginx_ssm_connect"
+$B1_IP     = Get-TFOutput "backend_1_private_ip"
+$B1_SSM    = Get-TFOutput "backend_1_ssm_connect"
+$B2_IP     = Get-TFOutput "backend_2_private_ip"
+$B2_SSM    = Get-TFOutput "backend_2_ssm_connect"
+$FE1_IP    = Get-TFOutput "frontend_1_private_ip"
+$FE1_SSM   = Get-TFOutput "frontend_1_ssm_connect"
+$FE2_IP    = Get-TFOutput "frontend_2_private_ip"
+$FE2_SSM   = Get-TFOutput "frontend_2_ssm_connect"
+$BOT_IP    = Get-TFOutput "chatbot_private_ip"
+$BOT_SSM   = Get-TFOutput "chatbot_ssm_connect"
+$WS_IP     = Get-TFOutput "webscraping_private_ip"
+$WS_SSM    = Get-TFOutput "webscraping_ssm_connect"
+$DB_IP     = Get-TFOutput "db_private_ip"
+$DB_SSM    = Get-TFOutput "db_ssm_connect"
+
 Set-Location $OriginalPath
 
+$sep      = "=" * 68
+$log_cmd  = "tail -f /var/log/solarway-setup.log"
+
 Write-Host ""
-Write-Host "============================================================" -ForegroundColor Green
-Write-Host "  [PROD] Deploy finalizado!" -ForegroundColor Green
-Write-Host "============================================================" -ForegroundColor Green
-Write-Host "  Nginx IP:       $NGINX_IP" -ForegroundColor White
-Write-Host "  Acesso SSM:     $SSM_CMD" -ForegroundColor White
-Write-Host "  Healthcheck:    http://$NGINX_IP/health" -ForegroundColor White
-Write-Host "  HTTPS (futuro): https://<seu-domínio>/health" -ForegroundColor Yellow
-Write-Host "============================================================" -ForegroundColor Green
+Write-Host $sep -ForegroundColor Green
+Write-Host "  SOLARWAY PROD - Deploy Finalizado" -ForegroundColor Green
+Write-Host $sep -ForegroundColor Green
+
+Write-Host ""
+Write-Host "  URLS PUBLICAS" -ForegroundColor Cyan
+Write-Host "  --------------------------------------------------------------------"
+Write-Host "  App (Management):  http://$NGINX_IP/"
+Write-Host "  API Backend:       http://$NGINX_IP/api/"
+Write-Host "  n8n Editor:        http://$NGINX_IP/n8n/"
+Write-Host "  WAHA Dashboard:    http://$NGINX_IP/waha/"
+Write-Host "  Healthcheck:       http://$NGINX_IP/health"
+Write-Host "  --------------------------------------------------------------------"
+
+Write-Host ""
+Write-Host "  ACESSO SSM + VISUALIZACAO DE LOGS" -ForegroundColor Cyan
+Write-Host "  (Conecte via SSM primeiro, depois cole o comando de LOG)" -ForegroundColor Gray
+Write-Host ""
+
+Write-Host "  [nginx-proxy] IP: $NGINX_IP (publico)" -ForegroundColor Yellow
+Write-Host "  Conectar:  $NGINX_SSM"
+Write-Host "  Ver Log:   $log_cmd"
+Write-Host ""
+
+Write-Host "  [backend-1 / monolito] IP: $B1_IP" -ForegroundColor Yellow
+Write-Host "  Conectar:  $B1_SSM"
+Write-Host "  Ver Log:   $log_cmd"
+Write-Host ""
+
+Write-Host "  [backend-2 / microservice] IP: $B2_IP" -ForegroundColor Yellow
+Write-Host "  Conectar:  $B2_SSM"
+Write-Host "  Ver Log:   $log_cmd"
+Write-Host ""
+
+Write-Host "  [frontend-1 / institucional] IP: $FE1_IP" -ForegroundColor Yellow
+Write-Host "  Conectar:  $FE1_SSM"
+Write-Host "  Ver Log:   $log_cmd"
+Write-Host ""
+
+Write-Host "  [frontend-2 / management] IP: $FE2_IP" -ForegroundColor Yellow
+Write-Host "  Conectar:  $FE2_SSM"
+Write-Host "  Ver Log:   $log_cmd"
+Write-Host ""
+
+Write-Host "  [chatbot / n8n + WAHA] IP: $BOT_IP (privado)" -ForegroundColor Yellow
+Write-Host "  Conectar:  $BOT_SSM"
+Write-Host "  Ver Log:   $log_cmd"
+Write-Host ""
+
+Write-Host "  [webscraping] IP: $WS_IP" -ForegroundColor Yellow
+Write-Host "  Conectar:  $WS_SSM"
+Write-Host "  Ver Log:   $log_cmd"
+Write-Host ""
+
+Write-Host "  [database / MySQL + Redis] IP: $DB_IP" -ForegroundColor Yellow
+Write-Host "  Conectar:  $DB_SSM"
+Write-Host "  Ver Log:   $log_cmd"
+Write-Host ""
+
+Write-Host $sep -ForegroundColor Green
+Write-Host "  Dica: conecte em uma instancia e rode o comando 'Ver Log' para debug." -ForegroundColor Gray
+Write-Host $sep -ForegroundColor Green
+Write-Host ""

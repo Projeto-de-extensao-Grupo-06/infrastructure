@@ -60,7 +60,7 @@ O `setup-proxy.sh` processa o template via `envsubst` com as seguintes variávei
 | `INSTITUCIONAL_PRIVATE_IP` | IP privado da VM `frontend-2` na VPC |
 | `BACKEND_PRIVATE_IP` | IP privado da VM de backend (reservado para uso futuro) |
 
-Essas variáveis são injetadas automaticamente pelo `null_resource.nginx_deploy` no Terraform.
+Essas variáveis são injetadas automaticamente pelo `user_data` da EC2 Nginx no Terraform.
 
 ---
 

@@ -64,9 +64,14 @@ module "ec2_nginx" {
     BACKEND_PRIVATE_IP=${module.ec2_backend_1.private_ip}
     MANAGEMENT_PRIVATE_IP=${module.ec2_frontend_2.private_ip}
     INSTITUCIONAL_PRIVATE_IP=${module.ec2_frontend_1.private_ip}
-    DOMAIN=solarway.test
-    EMAIL=admin@solarway.test
+    N8N_PRIVATE_IP=${module.ec2_chatbot.private_ip}
+    WAHA_PRIVATE_IP=${module.ec2_chatbot.private_ip}
+    DOMAIN=${var.domain}
+    EMAIL=${var.email}
+    GITHUB_USERNAME=${var.github_username}
+    GITHUB_ACCESS_TOKEN=${var.github_token}
     EOF
+
 
     # Scripts
     cat << 'EOF' > /tmp/solarway/scripts/setup/setup-vm.sh
@@ -90,6 +95,16 @@ resource "aws_route" "private_nat_access" {
   network_interface_id   = module.ec2_nginx.primary_network_interface_id
 }
 
+resource "aws_security_group_rule" "proxy_nat_ingress" {
+  type                     = "ingress"
+  from_port                = 0
+  to_port                  = 0
+  protocol                 = "-1"
+  cidr_blocks              = ["10.0.0.0/24"]
+  security_group_id        = module.ec2_nginx.security_group_id
+  description              = "Allow traffic from private subnets for NAT routing"
+}
+
 module "ec2_frontend_1" {
   source = "../../modules/ec2"
 
@@ -101,7 +116,14 @@ module "ec2_frontend_1" {
   frontend_ports       = [8081] # Apenas Institucional Website
   allowed_cidr_blocks  = ["10.0.0.0/24"]
   iam_instance_profile = "LabInstanceProfile"
-  user_data            = "${file("../../../scripts/setup-vm.sh")}\n${replace(file("./scripts/setup-frontend.sh"), "#!/bin/bash", "export FRONTEND_TYPE=\"institutional\"")}"
+  user_data = <<-EOT
+    #!/bin/bash
+    base64 -d << 'EOF' > /tmp/setup-vm.sh
+    ${base64encode(file("../../../scripts/setup-vm.sh"))}
+    EOF
+    export FRONTEND_TYPE="institutional"
+    bash /tmp/setup-vm.sh
+  EOT
 }
 
 module "ec2_frontend_2" {
@@ -115,7 +137,14 @@ module "ec2_frontend_2" {
   frontend_ports       = [8080] # Apenas Management System
   allowed_cidr_blocks  = ["10.0.0.0/24"]
   iam_instance_profile = "LabInstanceProfile"
-  user_data            = "${file("../../../scripts/setup-vm.sh")}\n${replace(file("./scripts/setup-frontend.sh"), "#!/bin/bash", "export FRONTEND_TYPE=\"management\"")}"
+  user_data = <<-EOT
+    #!/bin/bash
+    base64 -d << 'EOF' > /tmp/setup-vm.sh
+    ${base64encode(file("../../../scripts/setup-vm.sh"))}
+    EOF
+    export FRONTEND_TYPE="management"
+    bash /tmp/setup-vm.sh
+  EOT
 }
 
 module "ec2_backend_1" {
@@ -129,7 +158,16 @@ module "ec2_backend_1" {
   frontend_ports       = [8000] # Apenas Monolito
   allowed_cidr_blocks  = ["10.0.0.0/24"]
   iam_instance_profile = "LabInstanceProfile"
-  user_data            = "${file("../../../scripts/setup-vm.sh")}\n${replace(file("./scripts/setup-backend.sh"), "#!/bin/bash", "export BACKEND_TYPE=\"monolith\"")}"
+  user_data = <<-EOT
+    #!/bin/bash
+    base64 -d << 'EOF' > /tmp/setup-vm.sh
+    ${base64encode(file("../../../scripts/setup-vm.sh"))}
+    EOF
+    sed -i 's/\r$//' /tmp/setup-vm.sh
+    export BACKEND_TYPE="monolith"
+    sed -i 's/\r$//' /tmp/setup-vm.sh
+    bash /tmp/setup-vm.sh
+  EOT
 }
 
 module "ec2_backend_2" {
@@ -143,7 +181,16 @@ module "ec2_backend_2" {
   frontend_ports       = [8082] # Apenas Microserviço
   allowed_cidr_blocks  = ["10.0.0.0/24"]
   iam_instance_profile = "LabInstanceProfile"
-  user_data            = "${file("../../../scripts/setup-vm.sh")}\n${replace(file("./scripts/setup-backend.sh"), "#!/bin/bash", "export BACKEND_TYPE=\"microservice\"")}"
+  user_data = <<-EOT
+    #!/bin/bash
+    base64 -d << 'EOF' > /tmp/setup-vm.sh
+    ${base64encode(file("../../../scripts/setup-vm.sh"))}
+    EOF
+    sed -i 's/\r$//' /tmp/setup-vm.sh
+    export BACKEND_TYPE="microservice"
+    sed -i 's/\r$//' /tmp/setup-vm.sh
+    bash /tmp/setup-vm.sh
+  EOT
 }
 
 module "ec2_chatbot" {
@@ -157,7 +204,15 @@ module "ec2_chatbot" {
   frontend_ports       = [3000, 5678]
   allowed_cidr_blocks  = ["10.0.0.0/24"]
   iam_instance_profile = "LabInstanceProfile"
-  user_data            = "${file("../../../scripts/setup-vm.sh")}\n${replace(file("./scripts/setup-bot.sh"), "#!/bin/bash", "export BOT_TYPE=\"chatbot\"")}"
+  user_data = <<-EOT
+    #!/bin/bash
+    base64 -d << 'EOF' > /tmp/setup-vm.sh
+    ${base64encode(file("../../../scripts/setup-vm.sh"))}
+    EOF
+    export BOT_TYPE="chatbot"
+    sed -i 's/\r$//' /tmp/setup-vm.sh
+    bash /tmp/setup-vm.sh
+  EOT
 }
 
 module "ec2_webscraping" {
@@ -171,7 +226,15 @@ module "ec2_webscraping" {
   frontend_ports       = [5000]
   allowed_cidr_blocks  = ["10.0.0.0/24"]
   iam_instance_profile = "LabInstanceProfile"
-  user_data            = "${file("../../../scripts/setup-vm.sh")}\n${replace(file("./scripts/setup-bot.sh"), "#!/bin/bash", "export BOT_TYPE=\"webscraping\"")}"
+  user_data = <<-EOT
+    #!/bin/bash
+    base64 -d << 'EOF' > /tmp/setup-vm.sh
+    ${base64encode(file("../../../scripts/setup-vm.sh"))}
+    EOF
+    export BOT_TYPE="webscraping"
+    sed -i 's/\r$//' /tmp/setup-vm.sh
+    bash /tmp/setup-vm.sh
+  EOT
 }
 
 module "ec2_db" {
@@ -185,33 +248,140 @@ module "ec2_db" {
   frontend_ports       = [3306, 6379]
   allowed_cidr_blocks  = ["10.0.0.0/24"]
   iam_instance_profile = "LabInstanceProfile"
-  user_data            = "${file("../../../scripts/setup-vm.sh")}\n${file("./scripts/setup-db.sh")}"
+  user_data = <<-EOT
+    #!/bin/bash
+    base64 -d << 'EOF' > /tmp/setup-vm.sh
+    ${base64encode(file("../../../scripts/setup-vm.sh"))}
+    EOF
+    sed -i 's/\r$//' /tmp/setup-vm.sh
+    sed -i 's/\r$//' /tmp/setup-vm.sh
+    bash /tmp/setup-vm.sh
+  EOT
 }
 
+# ── Outputs: Acesso e IPs de todas as instâncias ──────────────────────────────
+
 output "nginx_public_ip" {
-  description = "IP Público do Nginx Proxy"
+  description = "IP Público do Nginx Proxy (único ponto de entrada externo)"
   value       = module.ec2_nginx.public_ip
 }
 
 output "nginx_ssm_connect" {
-  description = "Comando para conectar no Nginx Proxy via SSM"
+  description = "SSM — Nginx Proxy"
   value       = "aws ssm start-session --target ${module.ec2_nginx.instance_id}"
 }
 
-output "backend_private_ip" {
-  description = "IP Privado do Backend Monolito (para o Nginx)"
+output "nginx_logs" {
+  description = "Logs — Nginx Proxy"
+  value       = "aws ssm start-session --target ${module.ec2_nginx.instance_id} --document-name AWS-StartInteractiveCommand --parameters command='tail -f /var/log/solarway-setup.log'"
+}
+
+output "backend_1_private_ip" {
+  description = "IP Privado — Backend Monolito"
   value       = module.ec2_backend_1.private_ip
 }
 
-output "management_private_ip" {
-  description = "IP Privado do Frontend Management System (para o Nginx)"
+output "backend_1_ssm_connect" {
+  description = "SSM — Backend Monolito"
+  value       = "aws ssm start-session --target ${module.ec2_backend_1.instance_id}"
+}
+
+output "backend_1_logs" {
+  description = "Logs — Backend Monolito"
+  value       = "aws ssm start-session --target ${module.ec2_backend_1.instance_id} --document-name AWS-StartInteractiveCommand --parameters command='tail -f /var/log/solarway-setup.log'"
+}
+
+output "backend_2_private_ip" {
+  description = "IP Privado — Backend Microserviço"
+  value       = module.ec2_backend_2.private_ip
+}
+
+output "backend_2_ssm_connect" {
+  description = "SSM — Backend Microserviço"
+  value       = "aws ssm start-session --target ${module.ec2_backend_2.instance_id}"
+}
+
+output "backend_2_logs" {
+  description = "Logs — Backend Microserviço"
+  value       = "aws ssm start-session --target ${module.ec2_backend_2.instance_id} --document-name AWS-StartInteractiveCommand --parameters command='tail -f /var/log/solarway-setup.log'"
+}
+
+output "frontend_1_private_ip" {
+  description = "IP Privado — Frontend Institucional"
+  value       = module.ec2_frontend_1.private_ip
+}
+
+output "frontend_1_ssm_connect" {
+  description = "SSM — Frontend Institucional"
+  value       = "aws ssm start-session --target ${module.ec2_frontend_1.instance_id}"
+}
+
+output "frontend_1_logs" {
+  description = "Logs — Frontend Institucional"
+  value       = "aws ssm start-session --target ${module.ec2_frontend_1.instance_id} --document-name AWS-StartInteractiveCommand --parameters command='tail -f /var/log/solarway-setup.log'"
+}
+
+output "frontend_2_private_ip" {
+  description = "IP Privado — Frontend Management"
   value       = module.ec2_frontend_2.private_ip
 }
 
-output "institucional_private_ip" {
-  description = "IP Privado do Frontend Institucional Website (para o Nginx)"
-  value       = module.ec2_frontend_1.private_ip
+output "frontend_2_ssm_connect" {
+  description = "SSM — Frontend Management"
+  value       = "aws ssm start-session --target ${module.ec2_frontend_2.instance_id}"
 }
+
+output "frontend_2_logs" {
+  description = "Logs — Frontend Management"
+  value       = "aws ssm start-session --target ${module.ec2_frontend_2.instance_id} --document-name AWS-StartInteractiveCommand --parameters command='tail -f /var/log/solarway-setup.log'"
+}
+
+output "chatbot_private_ip" {
+  description = "IP Privado — Chatbot (n8n + WAHA)"
+  value       = module.ec2_chatbot.private_ip
+}
+
+output "chatbot_ssm_connect" {
+  description = "SSM — Chatbot"
+  value       = "aws ssm start-session --target ${module.ec2_chatbot.instance_id}"
+}
+
+output "chatbot_logs" {
+  description = "Logs — Chatbot"
+  value       = "aws ssm start-session --target ${module.ec2_chatbot.instance_id} --document-name AWS-StartInteractiveCommand --parameters command='tail -f /var/log/solarway-setup.log'"
+}
+
+output "webscraping_private_ip" {
+  description = "IP Privado — Web Scraping"
+  value       = module.ec2_webscraping.private_ip
+}
+
+output "webscraping_ssm_connect" {
+  description = "SSM — Web Scraping"
+  value       = "aws ssm start-session --target ${module.ec2_webscraping.instance_id}"
+}
+
+output "webscraping_logs" {
+  description = "Logs — Web Scraping"
+  value       = "aws ssm start-session --target ${module.ec2_webscraping.instance_id} --document-name AWS-StartInteractiveCommand --parameters command='tail -f /var/log/solarway-setup.log'"
+}
+
+output "db_private_ip" {
+  description = "IP Privado — Banco de Dados (MySQL + Redis)"
+  value       = module.ec2_db.private_ip
+}
+
+output "db_ssm_connect" {
+  description = "SSM — Banco de Dados"
+  value       = "aws ssm start-session --target ${module.ec2_db.instance_id}"
+}
+
+output "db_logs" {
+  description = "Logs — Banco de Dados"
+  value       = "aws ssm start-session --target ${module.ec2_db.instance_id} --document-name AWS-StartInteractiveCommand --parameters command='tail -f /var/log/solarway-setup.log'"
+}
+
+
 
 module "s3_raw" {
   source = "../../modules/s3"

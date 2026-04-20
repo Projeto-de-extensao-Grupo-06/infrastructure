@@ -34,15 +34,32 @@ As imagens deste serviço são hospedadas no **GitHub Container Registry (GHCR)*
 
 ---
 
-## Configuração de Ambiente
+## Variáveis de Ambiente
 
-A API do SpringBoot necessita de várias injeções no ambiente contêiner. Atente-se ao bloco `environment` no seu `docker-compose.yml`, você deve referenciar / suprir as variáveis necessárias para as seguintes obrigações:
-- **Banco de Dados Relacional**: Endpoint, Usuário, Senha e Estratégia JPA (`SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD`).
-- **Persistência Volátil (Redis)**: Host e Porta (`SPRING_DATA_REDIS_HOST`).
-- **Credenciais em Nuvem (AWS S3)**: Configurações como `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, e `BUCKET_NAME`.
-- **Gestão de Imagens (GHCR)**: É obrigatório possuir as chaves `GITHUB_USERNAME` e `GITHUB_ACCESS_TOKEN` no `.env`. Os scripts de setup utilizam estas chaves para realizar o `docker login` e `docker compose pull` automaticamente.
+> Todas as variáveis abaixo devem estar no `.env` na raiz do repositório de infra. Consulte o [VARIABLES_REFERENCE.md](../../docs/VARIABLES_REFERENCE.md) para detalhes completos.
 
-Para o `microservice/`, frequentemente é requerido um arquivo local `.env` repassando variáveis pontuais como `DB_PASSWORD`.
+### Monolito (`monolith/docker-compose.yml`)
+
+| Variável | Obrig. | Descrição |
+|----------|:------:|-----------|
+| `DB_USERNAME` | 🔴 | Usuário do MySQL |
+| `DB_PASSWORD` | 🔴 | Senha do MySQL |
+| `EMAIL` | 🔴 | E-mail remetente de notificações |
+| `EMAIL_PASSWORD` | 🔴 | Senha/App Password do e-mail (Gmail) |
+| `BOT_SECRET` | 🔴 | Chave simétrica para autenticar o bot |
+| `BUCKET_NAME` | 🔴 | Nome do bucket S3 do Data Lake |
+| `AWS_ACCESS_KEY_ID` | 🔴 | Credencial de sessão AWS |
+| `AWS_SECRET_ACCESS_KEY` | 🔴 | Credencial de sessão AWS |
+| `AWS_SESSION_TOKEN` | 🟡 | Token de sessão AWS (Academy) |
+| `PORT_BACKEND_MONOLITH` | 🟢 | Porta externa (padrão: `8000`) |
+
+### Microserviço (`microservice/docker-compose.yml`)
+
+| Variável | Obrig. | Descrição |
+|----------|:------:|-----------|
+| `DB_PASSWORD` | 🔴 | Senha do MySQL isolado do microserviço |
+| `PORT_BACKEND_MICROSERVICE` | 🟢 | Porta externa (padrão: `8082`) |
+| `PORT_MICROSERVICE_DB` | 🟢 | Porta do MySQL do microserviço (padrão: `3306`) |
 
 ---
 
@@ -53,13 +70,13 @@ Uma vez que as imagens estão dispostas remota ou localmente, basta adentrar ao 
 ### Iniciando o Monolito
 ```bash
 cd monolith
-docker-compose up -d
+docker compose up -d
 ```
 
 ### Iniciando Microserviços (Ex: schedule-notification)
 ```bash
 cd microservice
-docker-compose up -d --build
+docker compose up -d --build
 ```
 > **Nota de Build**: O manifesto apontará o contexto de compilação relativo (`build: ../../../../schedule-notification`) localizando o repositório-irmão do código fonte fora deste repositório de infra. Para que a compilação local da imagem do microserviço funcione, ele precisa encontrar e ler um `.env` existente nesse repositório fonte.
 

@@ -41,12 +41,12 @@ Abra um terminal na **raiz** deste diretório e execute o script apropriado ao s
 
 **Windows (PowerShell):**
 ```powershell
-.\scripts\global\setup-local.ps1
+.\scripts\setup-local.ps1
 ```
 
 **Linux/Mac (Bash WSL):**
 ```bash
-./scripts/global/setup-local.sh
+./scripts/setup-local.sh
 ```
 
 Isso subirá de uma só vez o MySQL, o Redis-Multidb, o Monolito do Spring Boot, os contêineres do Sistema de Gerenciamento, do Site Institucional, dos serviços nativos do WhatsApp IA e o scheduler de web scrapping.

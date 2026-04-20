@@ -63,10 +63,21 @@ http {
             proxy_pass http://backend/api/;
         }
 
-        # ── n8n e WAHA ─────────────────────────────────────────────────────
-        # Removidos para acesso direto via portas 5678 e 3000 (Baseline Step 1)
-        # location ^~ /n8n { ... }
-        # location ^~ /waha/ { ... }
+        # ── n8n (editor de fluxos e webhooks) ────────────────────────────────
+        # Em PROD: chatbot em subnet privada — acesso obrigatório via Nginx
+        location ^~ /n8n/ {
+            proxy_pass http://n8n/;
+        }
+
+        # Webhooks n8n na raiz /webhook (usado pelo WAHA para enviar eventos)
+        location ^~ /webhook/ {
+            proxy_pass http://n8n/webhook/;
+        }
+
+        # ── WAHA (dashboard WhatsApp) ─────────────────────────────────────────
+        location ^~ /waha/ {
+            proxy_pass http://waha/;
+        }
 
         # ── Institucional Website ──────────────────────────────────────────
         location ^~ /institucional/ {

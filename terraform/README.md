@@ -59,11 +59,13 @@ terraform init
 # Avaliação do pipeline de recursos
 terraform plan
 
-```bash
 # Aplicação definitiva do plano sobre a infraestrutura designada
-# É necessário passar as credenciais do GitHub para o pull de imagens privadas
-terraform apply -var="github_username=SEU_USER" -var="github_token=SEU_TOKEN"
+# Use o script de deploy que lê automaticamente do .env
+.\scripts\deploy-qa.ps1
+
+# Ou manualmente (credenciais do GitHub são lidas do .env automaticamente)
+terraform apply -auto-approve
 ```
 
 > [!IMPORTANT]
-> O Terraform agora automatiza o login no `ghcr.io` dentro das instâncias. Certifique-se de que as variáveis `github_username` e `github_token` sejam passadas no comando `apply` ou configuradas em um arquivo `terraform.tfvars`, caso contrário, as instâncias privadas não conseguirão baixar as imagens dos serviços.
+> O Terraform automatiza o login no `ghcr.io` dentro das instâncias. Certifique-se de que as variáveis `GITHUB_USERNAME` e `GITHUB_ACCESS_TOKEN` estejam configuradas no seu arquivo `.env` na raiz do projeto. O script `deploy-qa.ps1` lê automaticamente essas variáveis e passa para o Terraform.

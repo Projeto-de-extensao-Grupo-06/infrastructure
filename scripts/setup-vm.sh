@@ -1,7 +1,7 @@
 #!/bin/bash
 # ==============================================================================
 # Solarway - Shared VM Setup Script
-# Objetivo: Instalação de Docker e dependências básicas em VMs Ubuntu/Debian.
+# Objetivo: InstalaÃ§Ã£o de Docker e dependÃªncias bÃ¡sicas em VMs Ubuntu/Debian.
 # ==============================================================================
 set -e
 
@@ -12,21 +12,41 @@ if [ "$EUID" -eq 0 ]; then
     export DEBIAN_FRONTEND=noninteractive
 fi
 
-echo "➡️ [VM-SETUP] Atualizando repositórios e pacotes básicos..."
+echo "âž¡ï¸ [VM-SETUP] Aguardando conectividade com a internet (NAT Proxy)..."
+MAX_RETRIES=30
+RETRY_COUNT=0
+# Check connectivity to Google DNS via bash (no curl required)
+until (6<>/dev/tcp/8.8.8.8/53) &>/dev/null || [ $RETRY_COUNT -eq $MAX_RETRIES ]; do
+    RETRY_COUNT=$((RETRY_COUNT+1))
+    echo "  [VM-SETUP] Sem internet ainda. Tentativa $RETRY_COUNT/$MAX_RETRIES... (Aguardando Proxy/NAT)"
+    sleep 10
+done
+
+if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
+    echo "âŒ [VM-SETUP] Erro Critico: Falha ao obter acesso a internet apos 5 minutos."
+    exit 1
+fi
+echo "âœ… [VM-SETUP] Conectividade estabelecida!"
+
+# Aguarda travas do apt (caso o cloud-init esteja rodando algo)
+echo "âž¡ï¸ [VM-SETUP] Aguardando liberacao do apt lock..."
+while fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1; do sleep 5; done
+
+echo "âž¡ï¸ [VM-SETUP] Atualizando repositórios e pacotes bÃ¡sicos..."
 sudo apt-get update
 sudo apt-get install -y ca-certificates curl gnupg lsb-release git unzip
 
-echo "➡️ [VM-SETUP] Verificando Docker Engine..."
+echo "âž¡ï¸ [VM-SETUP] Verificando Docker Engine..."
 if ! command -v docker &> /dev/null; then
-    echo "➡️ [VM-SETUP] Instalando Docker..."
+    echo "âž¡ï¸ [VM-SETUP] Instalando Docker..."
     curl -fsSL https://get.docker.com -o get-docker.sh
     sudo sh get-docker.sh
     sudo apt-get install -y docker-compose-plugin || true
 else
-    echo "✅ [VM-SETUP] Docker já está instalado."
+    echo "âœ… [VM-SETUP] Docker jÃ¡ estÃ¡ instalado."
 fi
 
-echo "➡️ [VM-SETUP] Configurando permissões do Docker..."
+echo "âž¡ï¸ [VM-SETUP] Configurando permissÃµes do Docker..."
 sudo systemctl enable docker
 sudo systemctl start docker
 
@@ -34,4 +54,4 @@ TARGET_USER=${SUDO_USER:-ubuntu}
 if ! id "$TARGET_USER" &>/dev/null; then TARGET_USER="root"; fi
 sudo usermod -aG docker "$TARGET_USER" || true
 
-echo "✅ [VM-SETUP] Configuração básica da VM finalizada!"
+echo "âœ… [VM-SETUP] ConfiguraÃ§Ã£o bÃ¡sica da VM finalizada!"

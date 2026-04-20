@@ -47,16 +47,18 @@ Aguarda 24h → repete
 
 ## Variáveis de Ambiente
 
-| Variável | Descrição | Padrão |
-|----------|-----------|--------|
-| `DB_HOST` | Host do MySQL (nome do container na rede Docker) | `mysql-db` |
-| `DB_PORT` | Porta interna do MySQL | `3306` |
-| `DB_NAME` | Nome do banco de dados | `solarway` |
-| `DB_USER` | Usuário do banco | `${DB_USERNAME}` do `.env` |
-| `DB_PASSWORD` | Senha do banco | `${DB_PASSWORD}` do `.env` |
+> Consulte o [VARIABLES_REFERENCE.md](../../docs/VARIABLES_REFERENCE.md) para a referência completa.
+
+| Variável | Obrig. | Padrão | Descrição |
+|----------|:------:|--------|-----------|
+| `DB_HOST` | 🟢 | `mysql-db` | Hostname do MySQL (nome do container na rede Docker) |
+| `DB_PORT` | 🟢 | `3306` | Porta interna do MySQL |
+| `DB_NAME` | 🟢 | `solarway` | Nome do banco de dados |
+| `DB_USERNAME` | 🔴 | — | Usuário do MySQL (mapeado de `DB_USERNAME` do `.env`) |
+| `DB_PASSWORD` | 🔴 | — | Senha do MySQL (mapeado de `DB_PASSWORD` do `.env`) |
 
 > [!IMPORTANT]
-> A variável de ambiente é `DB_USER` (não `DB_USERNAME`). O mapeamento é feito no `docker-compose.yml`: `DB_USER: ${DB_USERNAME}`.
+> A variável de ambiente no container é `DB_USER` (não `DB_USERNAME`). O mapeamento é feito no `docker-compose.yml`: `DB_USER: ${DB_USERNAME}`.
 
 ---
 
