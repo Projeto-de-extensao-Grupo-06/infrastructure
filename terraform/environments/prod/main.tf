@@ -11,6 +11,12 @@ provider "aws" {
   region = "us-east-1"
 }
 
+variable "use_nat_gateway" {
+  description = "Se true, usa NAT Gateway (pago). Se false, usa Nginx como NAT Instance (grátis)."
+  type        = bool
+  default     = false
+}
+
 module "vpc_prod" {
   source = "../../modules/vpc"
 
@@ -29,6 +35,8 @@ module "vpc_prod" {
   ]
 
   azs = ["us-east-1a", "us-east-1a", "us-east-1a", "us-east-1a", "us-east-1a"]
+
+  enable_nat_gateway = var.use_nat_gateway
 }
 
 module "ec2_nginx" {
@@ -90,6 +98,7 @@ module "ec2_nginx" {
 }
 
 resource "aws_route" "private_nat_access" {
+  count                  = var.use_nat_gateway ? 0 : 1
   route_table_id         = module.vpc_prod.private_route_table_id
   destination_cidr_block = "0.0.0.0/0"
   network_interface_id   = module.ec2_nginx.primary_network_interface_id

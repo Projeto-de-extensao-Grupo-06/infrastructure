@@ -83,6 +83,21 @@ variable "domain" {
   default     = "solarway.test"
 }
 
+variable "aws_access_key" {
+  type      = string
+  sensitive = true
+}
+
+variable "aws_secret_key" {
+  type      = string
+  sensitive = true
+}
+
+variable "aws_session_token" {
+  type      = string
+  sensitive = true
+}
+
 
 # ── SSM Associations: Injeção de .env por serviço sem SSH ────────────────────
 # Usamos aws_ssm_association com AWS-RunShellScript para escrever o .env
@@ -97,8 +112,8 @@ resource "aws_ssm_association" "env_db" {
   }
 
   parameters = {
-    commands = join("\n", [
-      "mkdir -p /tmp/solarway/services/db",
+    commands = "echo '${base64encode(join("\n", [for s in [
+      "mkdir -p /tmp/solarway/services/db/mysql-init",
       "cat > /tmp/solarway/.env << 'ENVEOF'",
       templatefile("${path.module}/templates/env.db.tmpl", {
         db_username         = var.db_username
@@ -111,12 +126,16 @@ resource "aws_ssm_association" "env_db" {
       "cat > /tmp/solarway/services/db/docker-compose.yml << 'COMPOSEEOF'",
       file("../../../services/db/docker-compose.yml"),
       "COMPOSEEOF",
+      "cat > /tmp/solarway/services/db/mysql-init/init.sql << 'SQLEOF'",
+      file("../../../services/db/mysql-init/init.sql"),
+      "SQLEOF",
       "cat > /tmp/solarway/setup-app.sh << 'EOF'",
       file("${path.module}/scripts/setup-db.sh"),
       "EOF",
       "chmod +x /tmp/solarway/setup-app.sh",
+      "sed -i 's/\\r$//' /tmp/solarway/setup-app.sh",
       "sudo bash /tmp/solarway/setup-app.sh"
-    ])
+    ] : replace(s, "\r", "")]))}' | base64 -d | bash"
   }
 }
 
@@ -130,7 +149,7 @@ resource "aws_ssm_association" "env_backend_1" {
   }
 
   parameters = {
-    commands = join("\n", [
+    commands = "echo '${base64encode(join("\n", [for s in [
       "mkdir -p /tmp/solarway/services/backend/monolith",
       "cat > /tmp/solarway/.env << 'ENVEOF'",
       templatefile("${path.module}/templates/env.backend.tmpl", {
@@ -142,6 +161,9 @@ resource "aws_ssm_association" "env_backend_1" {
         bot_secret          = var.bot_secret
         github_username     = var.github_username
         github_access_token = var.github_token
+        aws_access_key      = var.aws_access_key
+        aws_secret_key      = var.aws_secret_key
+        aws_session_token   = var.aws_session_token
       }),
       "ENVEOF",
       "cat > /tmp/solarway/services/backend/monolith/docker-compose.yml << 'COMPOSEEOF'",
@@ -152,8 +174,9 @@ resource "aws_ssm_association" "env_backend_1" {
       "EOF",
       "export BACKEND_TYPE='monolith'",
       "chmod +x /tmp/solarway/setup-app.sh",
+      "sed -i 's/\\r$//' /tmp/solarway/setup-app.sh",
       "sudo -E bash /tmp/solarway/setup-app.sh"
-    ])
+    ] : replace(s, "\r", "")]))}' | base64 -d | bash"
   }
 }
 
@@ -167,7 +190,7 @@ resource "aws_ssm_association" "env_backend_2" {
   }
 
   parameters = {
-    commands = join("\n", [
+    commands = "echo '${base64encode(join("\n", [for s in [
       "mkdir -p /tmp/solarway/services/backend/microservice",
       "cat > /tmp/solarway/.env << 'ENVEOF'",
       templatefile("${path.module}/templates/env.backend.tmpl", {
@@ -179,6 +202,9 @@ resource "aws_ssm_association" "env_backend_2" {
         bot_secret          = var.bot_secret
         github_username     = var.github_username
         github_access_token = var.github_token
+        aws_access_key      = var.aws_access_key
+        aws_secret_key      = var.aws_secret_key
+        aws_session_token   = var.aws_session_token
       }),
       "ENVEOF",
       "cat > /tmp/solarway/services/backend/microservice/docker-compose.yml << 'COMPOSEEOF'",
@@ -189,8 +215,9 @@ resource "aws_ssm_association" "env_backend_2" {
       "EOF",
       "export BACKEND_TYPE='microservice'",
       "chmod +x /tmp/solarway/setup-app.sh",
+      "sed -i 's/\\r$//' /tmp/solarway/setup-app.sh",
       "sudo -E bash /tmp/solarway/setup-app.sh"
-    ])
+    ] : replace(s, "\r", "")]))}' | base64 -d | bash"
   }
 }
 
@@ -204,7 +231,7 @@ resource "aws_ssm_association" "env_frontend_1" {
   }
 
   parameters = {
-    commands = join("\n", [
+    commands = "echo '${base64encode(join("\n", [for s in [
       "mkdir -p /tmp/solarway/services/frontend/institucional-website",
       "cat > /tmp/solarway/.env << 'ENVEOF'",
       templatefile("${path.module}/templates/env.frontend.tmpl", {
@@ -221,8 +248,9 @@ resource "aws_ssm_association" "env_frontend_1" {
       "EOF",
       "export FRONTEND_TYPE='institutional'",
       "chmod +x /tmp/solarway/setup-app.sh",
+      "sed -i 's/\\r$//' /tmp/solarway/setup-app.sh",
       "sudo -E bash /tmp/solarway/setup-app.sh"
-    ])
+    ] : replace(s, "\r", "")]))}' | base64 -d | bash"
   }
 }
 
@@ -236,7 +264,7 @@ resource "aws_ssm_association" "env_frontend_2" {
   }
 
   parameters = {
-    commands = join("\n", [
+    commands = "echo '${base64encode(join("\n", [for s in [
       "mkdir -p /tmp/solarway/services/frontend/management-system",
       "cat > /tmp/solarway/.env << 'ENVEOF'",
       templatefile("${path.module}/templates/env.frontend.tmpl", {
@@ -253,8 +281,9 @@ resource "aws_ssm_association" "env_frontend_2" {
       "EOF",
       "export FRONTEND_TYPE='management'",
       "chmod +x /tmp/solarway/setup-app.sh",
+      "sed -i 's/\\r$//' /tmp/solarway/setup-app.sh",
       "sudo -E bash /tmp/solarway/setup-app.sh"
-    ])
+    ] : replace(s, "\r", "")]))}' | base64 -d | bash"
   }
 }
 
@@ -268,7 +297,7 @@ resource "aws_ssm_association" "env_bot" {
   }
 
   parameters = {
-    commands = join("\n", [
+    commands = "echo '${base64encode(join("\n", [for s in [
       "mkdir -p /tmp/solarway/services/bot",
       "cat > /tmp/solarway/.env << 'ENVEOF'",
       templatefile("${path.module}/templates/env.bot.tmpl", {
@@ -292,8 +321,9 @@ resource "aws_ssm_association" "env_bot" {
       "EOF",
       "export BOT_TYPE='chatbot'",
       "chmod +x /tmp/solarway/setup-app.sh",
+      "sed -i 's/\\r$//' /tmp/solarway/setup-app.sh",
       "sudo -E bash /tmp/solarway/setup-app.sh"
-    ])
+    ] : replace(s, "\r", "")]))}' | base64 -d | bash"
   }
 }
 
@@ -307,7 +337,7 @@ resource "aws_ssm_association" "env_webscraping" {
   }
 
   parameters = {
-    commands = join("\n", [
+    commands = "echo '${base64encode(join("\n", [for s in [
       "mkdir -p /tmp/solarway/services/web-scrapping",
       "cat > /tmp/solarway/.env << 'ENVEOF'",
       templatefile("${path.module}/templates/env.bot.tmpl", {
@@ -331,7 +361,48 @@ resource "aws_ssm_association" "env_webscraping" {
       "EOF",
       "export BOT_TYPE='webscraping'",
       "chmod +x /tmp/solarway/setup-app.sh",
+      "sed -i 's/\\r$//' /tmp/solarway/setup-app.sh",
       "sudo -E bash /tmp/solarway/setup-app.sh"
-    ])
+    ] : replace(s, "\r", "")]))}' | base64 -d | bash"
+  }
+}# ── Nginx Proxy: Configuração Dinâmica de Ingress ───────────────────────────
+# Isso garante que o Nginx sempre tenha os IPs privados atuais das outras VMs
+# sem precisar recriar a instância de proxy.
+
+resource "aws_ssm_association" "env_proxy" {
+  name = "AWS-RunShellScript"
+
+  targets {
+    key    = "InstanceIds"
+    values = [module.ec2_nginx.instance_id]
+  }
+
+  parameters = {
+    commands = "echo '${base64encode(join("\n", [for s in [
+      "mkdir -p /tmp/solarway/services/proxy",
+      "cat > /tmp/solarway/.env << 'ENVEOF'",
+      "BACKEND_PRIVATE_IP=${module.ec2_backend_1.private_ip}",
+      "MANAGEMENT_PRIVATE_IP=${module.ec2_frontend_2.private_ip}",
+      "INSTITUCIONAL_PRIVATE_IP=${module.ec2_frontend_1.private_ip}",
+      "N8N_PRIVATE_IP=${module.ec2_chatbot.private_ip}",
+      "WAHA_PRIVATE_IP=${module.ec2_chatbot.private_ip}",
+      "DOMAIN=${var.domain}",
+      "EMAIL=${var.email}",
+      "GITHUB_USERNAME=${var.github_username}",
+      "GITHUB_ACCESS_TOKEN=${var.github_token}",
+      "ENVEOF",
+      "cat > /tmp/solarway/services/proxy/docker-compose.yml << 'COMPOSEEOF'",
+      file("../../../services/proxy/docker-compose.yml"),
+      "COMPOSEEOF",
+      "cat > /tmp/solarway/services/proxy/nginx.conf.template << 'CONFEOF'",
+      file("../../../services/proxy/nginx.conf.template"),
+      "CONFEOF",
+      "cat > /tmp/solarway/setup-app.sh << 'EOF'",
+      file("./scripts/setup-proxy.sh"),
+      "EOF",
+      "chmod +x /tmp/solarway/setup-app.sh",
+      "sed -i 's/\\r$//' /tmp/solarway/setup-app.sh",
+      "sudo bash /tmp/solarway/setup-app.sh"
+    ] : replace(s, "\r", "")]))}' | base64 -d | bash"
   }
 }

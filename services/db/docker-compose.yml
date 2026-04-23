@@ -21,7 +21,7 @@ services:
       MYSQL_USER: ${DB_USERNAME}
       MYSQL_PASSWORD: ${DB_PASSWORD}
     ports:
-      - "${PORT_MYSQL:-3307}:3306" # Exposta na porta configurada (padrão 3307)
+      - "${PORT_MYSQL:-3306}:3306" # Exposta na porta padrao 3306
     volumes:
       - ./mysql-init:/docker-entrypoint-initdb.d # Scripts de inicialização
     restart: unless-stopped
@@ -30,5 +30,5 @@ services:
 
 networks:
   storage_network:
-    driver: bridge
+    external: true
     name: storage_network

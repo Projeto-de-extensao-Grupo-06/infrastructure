@@ -28,7 +28,7 @@ cd "$BASE_DIR"
 echo 'Aguardando Docker daemon...'
 for i in {1..150}; do
     if sudo docker info >/dev/null 2>&1; then
-        echo "âœ… Docker estÃ¡ pronto!"
+        echo "Docker estÃ¡ pronto!"
         break
     fi
     echo "Aguardando Docker..."
@@ -37,7 +37,8 @@ done
 
 # Login no GitHub Packages (GHCR)
 if [ -f .env ]; then
-  export $(grep -v '^#' .env | xargs)
+  GITHUB_USERNAME=$(grep GITHUB_USERNAME .env | cut -d'=' -f2 | tr -d '\r')
+  GITHUB_ACCESS_TOKEN=$(grep GITHUB_ACCESS_TOKEN .env | cut -d'=' -f2 | tr -d '\r')
   if [ ! -z "$GITHUB_ACCESS_TOKEN" ]; then
     echo "Efetuando login no GHCR..."
     echo "$GITHUB_ACCESS_TOKEN" | sudo docker login ghcr.io -u "$GITHUB_USERNAME" --password-stdin
@@ -72,4 +73,4 @@ if [[ "$BACKEND_TYPE" == "microservice" || -z "$BACKEND_TYPE" ]]; then
     fi
 fi
 
-echo "âœ… [PROD-BACKEND] Provisionamento Finalizado!"
+echo "[PROD-BACKEND] Provisionamento Finalizado!"

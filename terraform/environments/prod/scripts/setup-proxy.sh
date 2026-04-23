@@ -92,7 +92,7 @@ elif [ ! -d "/etc/letsencrypt/live/$DOMAIN" ]; then
             --test-cert || echo "âš ï¸ [PROD-PROXY] Falha ao obter SSL. O Nginx subira em HTTP apenas."
     fi
 else
-    echo "âœ… [PROD-PROXY] Certificado ja existente para $DOMAIN."
+    echo "[PROD-PROXY] Certificado ja existente para $DOMAIN."
 fi
 
 echo "[PROD-PROXY] Aguardando Docker daemon (timeout 180s)..."

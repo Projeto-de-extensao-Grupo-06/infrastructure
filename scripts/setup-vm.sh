@@ -26,7 +26,7 @@ if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
     echo "âŒ [VM-SETUP] Erro Critico: Falha ao obter acesso a internet apos 5 minutos."
     exit 1
 fi
-echo "âœ… [VM-SETUP] Conectividade estabelecida!"
+echo "[VM-SETUP] Conectividade estabelecida!"
 
 # Aguarda travas do apt (caso o cloud-init esteja rodando algo)
 echo "âž¡ï¸ [VM-SETUP] Aguardando liberacao do apt lock..."
@@ -43,7 +43,7 @@ if ! command -v docker &> /dev/null; then
     sudo sh get-docker.sh
     sudo apt-get install -y docker-compose-plugin || true
 else
-    echo "âœ… [VM-SETUP] Docker jÃ¡ estÃ¡ instalado."
+    echo "[VM-SETUP] Docker jÃ¡ estÃ¡ instalado."
 fi
 
 echo "âž¡ï¸ [VM-SETUP] Configurando permissÃµes do Docker..."
@@ -54,4 +54,8 @@ TARGET_USER=${SUDO_USER:-ubuntu}
 if ! id "$TARGET_USER" &>/dev/null; then TARGET_USER="root"; fi
 sudo usermod -aG docker "$TARGET_USER" || true
 
-echo "âœ… [VM-SETUP] ConfiguraÃ§Ã£o bÃ¡sica da VM finalizada!"
+echo "➡ [VM-SETUP] Criando redes Docker padrao do Solarway..."
+sudo docker network create solarway_network 2>/dev/null || true
+sudo docker network create storage_network 2>/dev/null || true
+
+echo "[VM-SETUP] Configuracao basica da VM finalizada!"

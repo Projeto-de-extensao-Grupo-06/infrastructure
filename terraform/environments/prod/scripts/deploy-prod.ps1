@@ -32,10 +32,18 @@ $TF_VARS = @{
     "github_username"= $envVars["GITHUB_USERNAME"]
     "github_token"   = $envVars["GITHUB_ACCESS_TOKEN"]
     "domain"         = if ($envVars.ContainsKey("DOMAIN")) { $envVars["DOMAIN"] } else { "solarway.test" }
+    "use_nat_gateway"= if ($envVars.ContainsKey("USE_NAT_GATEWAY")) { $envVars["USE_NAT_GATEWAY"].ToLower() -eq "true" } else { $false }
+    "aws_access_key" = $envVars["AWS_ACCESS_KEY_ID"]
+    "aws_secret_key" = $envVars["AWS_SECRET_ACCESS_KEY"]
+    "aws_session_token" = $envVars["AWS_SESSION_TOKEN"]
 }
 
 
-$varArgs = $TF_VARS.GetEnumerator() | ForEach-Object { "-var=`"$($_.Key)=$($_.Value)`"" }
+$varArgs = $TF_VARS.GetEnumerator() | ForEach-Object { 
+    $val = $_.Value
+    if ($val -is [bool]) { $val = $val.ToString().ToLower() }
+    "-var=`"$($_.Key)=$($val)`"" 
+}
 
 # -- Terraform Init ------------------------------------------------------------
 Write-Host "[DEPLOY - PROD] Inicializando Terraform..." -ForegroundColor Cyan

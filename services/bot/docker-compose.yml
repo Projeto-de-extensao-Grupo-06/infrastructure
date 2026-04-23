@@ -34,12 +34,11 @@ services:
       - solarway_network
 
   n8n:
-    build: 
-      context: .
-      dockerfile: ./n8n/Dockerfile
+    image: n8nio/n8n:latest
     container_name: bot-n8n
     platform: linux/amd64
     environment:
+      N8N_USER_MANAGEMENT_DISABLED: "true"
       BACKEND_API_URL: "${BACKEND_API_URL:-http://backend-service:8000}"
       WAHA_API_URL: "${WAHA_API_URL:-http://bot-waha:3000}"
       N8N_PROTOCOL: "${N8N_PROTOCOL:-http}"

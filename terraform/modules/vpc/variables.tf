@@ -26,3 +26,9 @@ variable "azs" {
   type        = list(string)
   default     = ["us-east-1a", "us-east-1b"]
 }
+
+variable "enable_nat_gateway" {
+  description = "Habilitar NAT Gateway (custo extra). Se falso, usa NAT Instance."
+  type        = bool
+  default     = false
+}

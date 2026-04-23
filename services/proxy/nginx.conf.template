@@ -66,7 +66,8 @@ http {
         # ── n8n (editor de fluxos e webhooks) ────────────────────────────────
         # Em PROD: chatbot em subnet privada — acesso obrigatório via Nginx
         location ^~ /n8n/ {
-            proxy_pass http://n8n/;
+            proxy_pass http://n8n/; # Passa com barra para remover /n8n/ da URI enviada ao upstream
+            proxy_redirect / /n8n/;
         }
 
         # Webhooks n8n na raiz /webhook (usado pelo WAHA para enviar eventos)
@@ -77,6 +78,8 @@ http {
         # ── WAHA (dashboard WhatsApp) ─────────────────────────────────────────
         location ^~ /waha/ {
             proxy_pass http://waha/;
+            proxy_redirect / /waha/;
+            proxy_redirect /dashboard/ /waha/dashboard/;
         }
 
         # ── Institucional Website ──────────────────────────────────────────
@@ -86,9 +89,17 @@ http {
         }
 
         # ── Management System (ROOT) ──────────────────────────────────────
-        # Agora o root aceita apenas o que sobrou, garantindo que assets do n8n/waha
-        # que já foram prefixados não caiam aqui por erro.
+        # Hack de Referer para SPAs (n8n e waha) que não tem base URL configurável.
+        # Eles pedem os arquivos .js na raiz (ex: /assets/index.js). Nginx intercepta
+        # pelo Referer e roteia de volta para o container correto.
         location / {
+            if ($http_referer ~* "/n8n") {
+                proxy_pass http://n8n;
+            }
+            if ($http_referer ~* "/waha") {
+                proxy_pass http://waha;
+            }
+            
             proxy_pass http://frontend_management/;
         }
 

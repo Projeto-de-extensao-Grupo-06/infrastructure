@@ -44,7 +44,8 @@ done
 
 # Login no GHCR
 if [ -f .env ]; then
-    export $(grep -v '^#' .env | xargs)
+    GITHUB_USERNAME=$(grep GITHUB_USERNAME .env | cut -d'=' -f2 | tr -d '\r')
+    GITHUB_ACCESS_TOKEN=$(grep GITHUB_ACCESS_TOKEN .env | cut -d'=' -f2 | tr -d '\r')
     if [ -n "$GITHUB_ACCESS_TOKEN" ]; then
         echo "$GITHUB_ACCESS_TOKEN" | sudo docker login ghcr.io -u "$GITHUB_USERNAME" --password-stdin
     fi
