@@ -137,11 +137,12 @@ Write-Host $sep -ForegroundColor Green
 Write-Host ""
 Write-Host "  URLS PUBLICAS" -ForegroundColor Cyan
 Write-Host "  --------------------------------------------------------------------"
-Write-Host "  App (Management):  http://$NGINX_IP/"
-Write-Host "  API Backend:       http://$NGINX_IP/api/"
-Write-Host "  n8n Editor:        http://$NGINX_IP/n8n/"
-Write-Host "  WAHA Dashboard:    http://$NGINX_IP/waha/"
-Write-Host "  Healthcheck:       http://$NGINX_IP/health"
+Write-Host "  App (Management):  http://$($NGINX_IP)/"
+Write-Host "  API Backend:       http://$($NGINX_IP)/api/"
+Write-Host "  Website Instit.:   http://$($NGINX_IP)/institucional/"
+Write-Host "  n8n Editor:        http://$($NGINX_IP):5678/"
+Write-Host "  WAHA Dashboard:    http://$($NGINX_IP):3000/"
+Write-Host "  Healthcheck:       http://$($NGINX_IP)/health"
 Write-Host "  --------------------------------------------------------------------"
 
 Write-Host ""

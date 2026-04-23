@@ -47,7 +47,7 @@ module "ec2_nginx" {
   instance_type        = "t3.small"
   vpc_id               = module.vpc_prod.vpc_id
   subnet_id            = module.vpc_prod.public_subnet_ids[0]
-  frontend_ports       = [80, 443]
+  frontend_ports       = [80, 443, 3000, 5678, 8081]
   iam_instance_profile = "LabInstanceProfile"
   source_dest_check    = false
 
