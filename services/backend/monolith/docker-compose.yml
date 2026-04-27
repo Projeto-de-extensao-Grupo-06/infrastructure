@@ -16,6 +16,7 @@ services:
       EMAIL: "${EMAIL}"
       EMAIL_PASSWORD: "${EMAIL_PASSWORD}"
       SERVER_PORT: 8000
+      SERVER_FORWARD_HEADERS_STRATEGY: framework
       BOT_SECRET: "${BOT_SECRET}"
       SOLARIZE_SECURITY_BOT_SECRET: "${BOT_SECRET}"
       BUCKET_NAME: "${BUCKET_NAME}"
@@ -36,4 +37,3 @@ networks:
   storage_network:
     external: true
     name: storage_network
-

@@ -19,9 +19,13 @@ services:
       - |
         while true; do
           echo "[web-scrapping] $(date '+%Y-%m-%d %H:%M:%S') - Iniciando raspagem..."
-          python -m src.main || echo "[web-scrapping] Erro na execucao. Retentando no proximo ciclo."
-          echo "[web-scrapping] $(date '+%Y-%m-%d %H:%M:%S') - Proxima execucao em 24h."
-          sleep 86400
+          if python -m src.main; then
+            echo "[web-scrapping] $(date '+%Y-%m-%d %H:%M:%S') - Concluido. Proxima execucao em 24h."
+            sleep 86400
+          else
+            echo "[web-scrapping] $(date '+%Y-%m-%d %H:%M:%S') - Falha (banco indisponivel?). Retentando em 60s."
+            sleep 60
+          fi
         done
     environment:
       DB_HOST: ${DB_HOST:-mysql-db}

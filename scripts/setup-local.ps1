@@ -16,18 +16,54 @@ if ($env:GITHUB_ACCESS_TOKEN -and $env:GITHUB_USERNAME) {
     Write-Output $env:GITHUB_ACCESS_TOKEN | docker login ghcr.io -u $env:GITHUB_USERNAME --password-stdin
 }
 
+Write-Host "Criando redes Docker do Solarway..." -ForegroundColor Cyan
+docker network create solarway_network 2>$null
+docker network create storage_network  2>$null
+
 Write-Host "Inicializando a base da infraestrutura (Redes e Bancos)..." -ForegroundColor Cyan
+
 Set-Location services/db
 docker-compose --env-file ../../.env up -d
 
-Write-Host "Aguardando 15 segundos para inicialização inicial do Banco de Dados..." -ForegroundColor Yellow
-Start-Sleep -Seconds 15
+Write-Host "Aguardando MySQL (Monolito) ficar pronto (TCP 3306)..." -ForegroundColor Yellow
+$maxRetries = 60   # 180s max
+$retries = 0
+do {
+    $result = docker exec mysql-db mysqladmin -u root -p06241234 -h 127.0.0.1 ping 2>&1
+    if ($result -match "mysqld is alive") {
+        Write-Host "  MySQL (Monolito) pronto!" -ForegroundColor Green
+        break
+    }
+    $retries++
+    Write-Host "  MySQL (Monolito) aguardando TCP... ($retries/$maxRetries)" -ForegroundColor DarkYellow
+    Start-Sleep -Seconds 3
+} while ($retries -lt $maxRetries)
 
-Write-Host "Inicializando o Backend (Monolito e Microserviços)..." -ForegroundColor Cyan
-Set-Location ../backend/monolith
+Write-Host "Inicializando a base do Microserviço (DB e Broker)..." -ForegroundColor Cyan
+Set-Location ../backend/microservice
+docker-compose --env-file ../../../.env up -d microservice-db microservice-broker
+
+Write-Host "Aguardando MySQL (Microservico) ficar pronto (TCP 3306)..." -ForegroundColor Yellow
+$retries = 0
+do {
+    # Microservice DB usa root password do .env (DB_PASSWORD)
+    $result = docker exec microservice-db mysqladmin -u root -p06241234 -h 127.0.0.1 ping 2>&1
+    if ($result -match "mysqld is alive") {
+        Write-Host "  MySQL (Microservico) pronto!" -ForegroundColor Green
+        break
+    }
+    $retries++
+    Write-Host "  MySQL (Microservico) aguardando TCP... ($retries/$maxRetries)" -ForegroundColor DarkYellow
+    Start-Sleep -Seconds 3
+} while ($retries -lt $maxRetries)
+
+Write-Host "Subindo Monolito (Backend)..." -ForegroundColor Cyan
+Set-Location ../monolith
 docker-compose --env-file ../../../.env up -d
+
+Write-Host "Subindo App do Microservico..." -ForegroundColor Cyan
 Set-Location ../microservice
-docker-compose --env-file ../../../.env up -d --build
+docker-compose --env-file ../../../.env up -d microservice-app
 
 Write-Host "Inicializando os Frontends..." -ForegroundColor Cyan
 Set-Location ../../frontend/management-system
@@ -42,7 +78,11 @@ docker-compose --env-file ../../.env up -d
 
 Write-Host "Inicializando o Nginx Proxy (entry point local)..." -ForegroundColor Cyan
 Set-Location ../proxy
-docker-compose --env-file ../../.env up -d
+# Usa o arquivo LOCAL standalone (sem merge com docker-compose.yml).
+# O merge de listas de `ports` no compose apenas adiciona portas, nunca remove —
+# então o override não funciona para eliminar portas do arquivo base.
+# Em prod/qa usa-se: docker-compose -f docker-compose.yml up -d
+docker-compose -f docker-compose.local.yml --env-file ../../.env up -d
 
 Write-Host "Inicializando o Web Scrapping (execução a cada 24h)..." -ForegroundColor Cyan
 Set-Location ../web-scrapping

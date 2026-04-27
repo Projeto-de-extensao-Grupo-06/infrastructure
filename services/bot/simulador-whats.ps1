@@ -1,11 +1,12 @@
 param(
     [string]$Numero = "5511949902159",
     [string]$Nome = "Ranier",
-    [string]$Mensagem = "sim!",
-    [boolean]$Producao
+    [string]$Mensagem = "Oi, sou Ranier e quero realizar um pré orçamento com vocês da Solarqay",
+    [boolean]$Producao = $true,
+    [string]$WEBHOOK = "http://44.223.14.16:5678/webhook-test/webhook"
 )
 
-$Url = if ($Producao) { "http://localhost:5678/webhook/webhook" } else { "http://localhost:5678/webhook-test/webhook" }
+$Url = if ($Producao) { $WEBHOOK } else { "http://localhost:5678/webhook-test/webhook" }
 
 $Body = @{
     event = "message"

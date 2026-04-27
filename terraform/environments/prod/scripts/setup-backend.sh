@@ -47,6 +47,7 @@ fi
 
 # Diferenciação de apps baseada em variável de ambiente (BACKEND_TYPE)
 sudo docker network create solarway_network 2>/dev/null || true
+sudo docker network create storage_network 2>/dev/null || true
 if [[ "$BACKEND_TYPE" == "monolith" || -z "$BACKEND_TYPE" ]]; then
     echo "âž¡ï¸ [PROD-BACKEND] Iniciando Monolito..."
     if [ -d "services/backend/monolith" ]; then

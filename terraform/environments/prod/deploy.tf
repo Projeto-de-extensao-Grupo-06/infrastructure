@@ -98,6 +98,18 @@ variable "aws_session_token" {
   sensitive = true
 }
 
+variable "rabbitmq_default_user" {
+  description = "Usuário do RabbitMQ"
+  type        = string
+  default     = "admin"
+}
+
+variable "rabbitmq_default_pass" {
+  description = "Senha do RabbitMQ"
+  type        = string
+  default     = "0624"
+}
+
 
 # ── SSM Associations: Injeção de .env por serviço sem SSH ────────────────────
 # Usamos aws_ssm_association com AWS-RunShellScript para escrever o .env
@@ -164,6 +176,8 @@ resource "aws_ssm_association" "env_backend_1" {
         aws_access_key      = var.aws_access_key
         aws_secret_key      = var.aws_secret_key
         aws_session_token   = var.aws_session_token
+        rabbitmq_default_user = var.rabbitmq_default_user
+        rabbitmq_default_pass = var.rabbitmq_default_pass
       }),
       "ENVEOF",
       "cat > /tmp/solarway/services/backend/monolith/docker-compose.yml << 'COMPOSEEOF'",
@@ -205,6 +219,8 @@ resource "aws_ssm_association" "env_backend_2" {
         aws_access_key      = var.aws_access_key
         aws_secret_key      = var.aws_secret_key
         aws_session_token   = var.aws_session_token
+        rabbitmq_default_user = var.rabbitmq_default_user
+        rabbitmq_default_pass = var.rabbitmq_default_pass
       }),
       "ENVEOF",
       "cat > /tmp/solarway/services/backend/microservice/docker-compose.yml << 'COMPOSEEOF'",

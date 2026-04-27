@@ -53,6 +53,7 @@ fi
 
 # Chatbot Stack (n8n + WAHA + Redis)
 sudo docker network create solarway_network 2>/dev/null || true
+sudo docker network create storage_network 2>/dev/null || true
 if [[ "$BOT_TYPE" == "chatbot" || -z "$BOT_TYPE" ]]; then
     echo "[PROD-BOT] Iniciando Chatbot Stack (n8n + WAHA + Redis)..."
     if [ -d "services/bot" ]; then

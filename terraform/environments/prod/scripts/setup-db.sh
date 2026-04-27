@@ -48,6 +48,7 @@ if [ -f .env ]; then
 fi
 
 sudo docker network create solarway_network 2>/dev/null || true
+sudo docker network create storage_network 2>/dev/null || true
 if [ -d "services/db" ]; then
     cd services/db
     echo "âž¡ï¸ [PROD-DB] Pulling images..."

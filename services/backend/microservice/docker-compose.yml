@@ -13,6 +13,19 @@ services:
     networks:
       - solarway_network
 
+  microservice-broker:
+    image: 'rabbitmq:4.2.4-management'
+    environment:
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - solarway_network
+
   microservice-app:
     image: ghcr.io/projeto-de-extensao-grupo-06/schedule-notification:latest
     container_name: schedule-notification
@@ -24,6 +37,9 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mysql://microservice-db:3306/schedule_notification_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      SPRING_RABBITMQ_HOST: microservice-broker
+      SPRING_RABBITMQ_USERNAME: ${RABBITMQ_DEFAULT_USER}
+      SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_DEFAULT_PASS}
     restart: on-failure
     depends_on:
       - microservice-db
@@ -34,3 +50,6 @@ networks:
   solarway_network:
     name: solarway_network
     external: true
+
+volumes:
+  rabbitmq_data:

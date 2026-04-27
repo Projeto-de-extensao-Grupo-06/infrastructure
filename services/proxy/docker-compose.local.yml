@@ -1,0 +1,31 @@
+# ==============================================================================
+# Solarway Proxy - Configuração LOCAL (standalone)
+#
+# Uso: docker-compose -f docker-compose.local.yml --env-file ../../.env up -d
+#
+# Por que este arquivo existe:
+#   Localmente todos os serviços rodam no mesmo host Docker.
+#   bot-waha já ocupa a porta 3000, bot-n8n ocupa 5678 e institutional-website
+#   ocupa 8081. Tentar expor essas portas novamente aqui causaria o erro
+#   "port is already allocated".
+#
+#   Em PROD/QA, o nginx-proxy é a ÚNICA VM com IP público, então ele expõe
+#   essas portas para rotear para as VMs privadas. Isso está no docker-compose.yml.
+# ==============================================================================
+
+services:
+  nginx-proxy:
+    image: nginx:alpine
+    container_name: nginx-proxy
+    ports:
+      - "${PORT_PROXY:-80}:80"
+    volumes:
+      - ./nginx.local.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - solarway_network
+    restart: unless-stopped
+
+networks:
+  solarway_network:
+    external: true
+    name: solarway_network
