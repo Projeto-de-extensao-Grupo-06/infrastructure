@@ -195,12 +195,53 @@ INSERT IGNORE INTO client (id_client, first_name, last_name, document_number, do
 (4, 'Lucia', 'Ferreira', '98765432100', 'CPF', '2025-10-20 11:00:00', '21988887777', 'lucia.ferreira@example.com', 4, 'ACTIVE'),
 (5, 'Empresa Tech', 'Solar', '55666777000199', 'CNPJ', '2025-11-01 15:45:00', '3133334444', 'contato@techsolar.com', 5, 'ACTIVE');
 
+INSERT IGNORE INTO client (first_name, last_name, phone, email, status, document_number, document_type, created_at, updated_at) VALUES
+('João', 'da Silva', '11999999999', 'joao@email.com', 'ACTIVE', '12345678900', 'CPF', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('Maria', 'Souza', '11888888888', 'maria@email.com', 'ACTIVE', '98765432100', 'CPF', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('Carlos', 'Pereira', '11777777777', 'carlos@email.com', 'INACTIVE', '11122233344', 'CNPJ', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('Ana', 'Oliveira', '11912345678', 'ana.oliveira@email.com', 'ACTIVE', '44455566677', 'CPF', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('Ricardo', 'Santos', '21987654321', 'ricardo.santos@email.com', 'ACTIVE', '88899900011', 'CPF', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('Luciana', 'Mendes', '31998877665', 'luciana.mendes@email.com', 'INACTIVE', '22233344455', 'CPF', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('Marcos', 'Almeida', '1133445566', 'contato@almeidame.com', 'ACTIVE', '12345678000199', 'CNPJ', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('Fernanda', 'Costa', '41995544332', 'fer.costa@email.com', 'ACTIVE', '77788899922', 'CPF', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('Roberto', 'Ferreira', '51988772211', 'roberto.f@email.com', 'ACTIVE', '55566677788', 'CPF', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('Juliana', 'Lima', '61991122334', 'juliana.lima@email.com', 'ACTIVE', '99900011122', 'CPF', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('Bruno', 'Rocha', '1144556677', 'financeiro@rochacorp.com', 'ACTIVE', '98765432000188', 'CNPJ', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('Camila', 'Barbosa', '71992233445', 'camila.b@email.com', 'INACTIVE', '33344455566', 'CPF', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('Tiago', 'Nunes', '81987651234', 'tiago.nunes@email.com', 'ACTIVE', '11100099988', 'CPF', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('Gabriel', 'Duarte', '11911112222', 'gabriel.duarte@email.com', 'ACTIVE', '10120230344', 'CPF', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('Beatriz', 'Pinto', '21922223333', 'beatriz.p@email.com', 'ACTIVE', '50560670788', 'CPF', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('André', 'Teixeira', '31933334444', 'andre.tex@email.com', 'INACTIVE', '90980870766', 'CPF', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('Larissa', 'Cavalcanti', '41944445555', 'lari.cav@email.com', 'ACTIVE', '11223344000155', 'CNPJ', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('Felipe', 'Cardoso', '51955556666', 'felipe.c@email.com', 'ACTIVE', '30340450599', 'CPF', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('Patrícia', 'Gomes', '61966667777', 'patri.gomes@email.com', 'ACTIVE', '60670780811', 'CPF', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('Henrique', 'Souza', '71977778888', 'h.souza@email.com', 'ACTIVE', '80890910122', 'CPF', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('Daniela', 'Moreira', '81988889999', 'dani.moreira@email.com', 'INACTIVE', '44332211000100', 'CNPJ', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('Leonardo', 'Freitas', '11912123434', 'leo.freitas@email.com', 'ACTIVE', '12132343455', 'CPF', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('Vanessa', 'Lopes', '21923234545', 'vanessa.l@email.com', 'ACTIVE', '54565676788', 'CPF', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('Gustavo', 'Batista', '31934345656', 'gustavo.b@email.com', 'ACTIVE', '98978767655', 'CPF', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('Letícia', 'Assis', '41945456767', 'leticia.assis@email.com', 'ACTIVE', '10190980877', 'CPF', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('Sérgio', 'Marques', '51956567878', 'sergio.m@email.com', 'ACTIVE', '55443322000111', 'CNPJ', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('Aline', 'Vieira', '61967678989', 'aline.v@email.com', 'INACTIVE', '70780890933', 'CPF', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('Maurício', 'Moraes', '71978789090', 'mau.moraes@email.com', 'ACTIVE', '20230340455', 'CPF', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('Tatiane', 'Ribeiro', '81989890101', 'tati.rib@email.com', 'ACTIVE', '40450560677', 'CPF', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('Renato', 'Carvalho', '11990901212', 'renato.c@email.com', 'ACTIVE', '80870760644', 'CPF', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('Sabrina', 'Gonçalves', '21901012323', 'sabrina.g@email.com', 'ACTIVE', '66554433000122', 'CNPJ', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('Igor', 'Fernandes', '31912123434', 'igor.f@email.com', 'ACTIVE', '90910120233', 'CPF', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('Priscila', 'Monteiro', '41923234545', 'pri.monteiro@email.com', 'ACTIVE', '30320210144', 'CPF', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+
+
 INSERT IGNORE INTO project (id_project, name, description, status, status_weight, preview_status, is_active, system_type, project_from, created_at, deadline, fk_client, fk_responsible, fk_address) VALUES
 (1, 'Residência João Silva', 'Instalação 5kWp', 'SCHEDULED_TECHNICAL_VISIT', 5, 'CLIENT_AWAITING_CONTACT', TRUE, 'ON_GRID', 'SITE_BUDGET_FORM', CURRENT_TIMESTAMP, DATE_ADD('2025-09-15', INTERVAL 30 DAY), 1, 2, 1),
 (2, 'Clínica Maria Oliveira', 'Backup Off-grid', 'INSTALLED', 10, 'SCHEDULED_INSTALLING_VISIT', TRUE, 'OFF_GRID', 'WHATSAPP_BOT', CURRENT_TIMESTAMP, DATE_ADD('2025-09-20', INTERVAL 30 DAY), 2, 3, 2),
 (3, 'Comércio Pedro Santos', 'Sistema Comercial', 'COMPLETED', 13, 'INSTALLED', TRUE, 'ON_GRID', 'INTERNAL_MANUAL_ENTRY', CURRENT_TIMESTAMP, DATE_ADD('2025-10-02', INTERVAL 30 DAY), 3, 1, 3),
 (4, 'Casa de Praia Lucia', 'Off-grid simples', 'FINAL_BUDGET', 7, 'TECHNICAL_VISIT_COMPLETED', TRUE, 'OFF_GRID', 'SITE_BUDGET_FORM', CURRENT_TIMESTAMP, DATE_ADD('2025-10-15', INTERVAL 30 DAY), 4, 4, 4),
-(5, 'Tech Solar Sede', 'Alta demanda', 'NEW', 3, NULL, TRUE, 'ON_GRID', 'INTERNAL_MANUAL_ENTRY', CURRENT_TIMESTAMP, DATE_ADD('2025-10-28', INTERVAL 30 DAY), 5, 2, 5);
+(5, 'Tech Solar Sede', 'Alta demanda', 'NEW', 3, NULL, TRUE, 'ON_GRID', 'INTERNAL_MANUAL_ENTRY', CURRENT_TIMESTAMP, DATE_ADD('2025-10-28', INTERVAL 30 DAY), 5, 2, 5),
+(6, 'Expansão João Silva', 'Adição de painéis', 'PRE_BUDGET', 4, 'NEW', TRUE, 'ON_GRID', 'WHATSAPP_BOT', CURRENT_TIMESTAMP, DATE_ADD('2025-11-05', INTERVAL 30 DAY), 1, 2, 1),
+(7, 'Estacionamento Shopping', 'Carport Solar', 'SCHEDULED_INSTALLING_VISIT', 6, 'AWAITING_MATERIALS', TRUE, 'ON_GRID', 'SITE_BUDGET_FORM', CURRENT_TIMESTAMP, DATE_ADD('2025-11-10', INTERVAL 30 DAY), 3, 3, 3),
+(8, 'Sítio Recanto', 'Bombeamento Solar', 'NEGOTIATION_FAILED', 12, 'FINAL_BUDGET', TRUE, 'OFF_GRID', 'WHATSAPP_BOT', CURRENT_TIMESTAMP, DATE_ADD('2025-11-12', INTERVAL 30 DAY), 2, 4, 2),
+(9, 'Condomínio Flores', 'Área comum', 'CLIENT_AWAITING_CONTACT', 1, 'PRE_BUDGET', TRUE, 'ON_GRID', 'SITE_BUDGET_FORM', CURRENT_TIMESTAMP, DATE_ADD('2025-11-20', INTERVAL 30 DAY), 4, 1, 4);
 
 INSERT IGNORE INTO material (id_material, name, metric, hidden, description) VALUES
 (1, 'Painel Solar 550W (Solar Center)', 'UNIT', FALSE, 'Ficha Técnica Painel'),
@@ -245,16 +286,147 @@ INSERT IGNORE INTO budget_material (fk_budget, fk_material_url, quantity, price)
 (2, 2, 1, 3500.00),
 (2, 3, 2, 2800.00);
 
+INSERT IGNORE INTO budget_parameter (name, description, metric, is_pre_budget, fixed_value, active, created_at) VALUES
+('Tipo de Telhado', 'Define o material do telhado da instalação', 'un', TRUE, 0.00, TRUE, CURRENT_TIMESTAMP),
+('Potência do Sistema', 'Potência total do sistema solar em kWp', 'kWp', TRUE, 0.00, TRUE, CURRENT_TIMESTAMP),
+('Mão de Obra', 'Custo por hora de mão de obra da equipe', 'R$/h', FALSE, 150.00, TRUE, CURRENT_TIMESTAMP),
+('Deslocamento', 'Custo de deslocamento da equipe até o local', 'km', FALSE, 2.50, TRUE, CURRENT_TIMESTAMP),
+('Engenheiro', 'Valor cobrado pelo serviço de engenharia', 'R$', FALSE, 800.00, TRUE, CURRENT_TIMESTAMP),
+('Tipo de Estrutura', 'Define o tipo de estrutura de fixação dos painéis', 'un', TRUE, 0.00, FALSE, CURRENT_TIMESTAMP);
+
+INSERT IGNORE INTO parameter_option (type, addition_tax, fixed_cost, fk_budget_parameter) VALUES
+('Cerâmico', 0.08, 500.00, 1),
+('Metálico', 0.12, 800.00, 1),
+('Fibrocimento', 0.05, 300.00, 1),
+('até 5kWp', 0.00, 0.00, 2),
+('5kWp a 10kWp', 0.10, 0.00, 2),
+('acima de 10kWp', 0.20, 0.00, 2),
+('Solo', 0.15, 1200.00, 6),
+('Telhado Inclinado', 0.05, 400.00, 6),
+('Telhado Plano', 0.08, 600.00, 6);
+
 -- 4. Views de Análise
-CREATE OR REPLACE VIEW VIEW_ANALYSIS_PROJECT_FINANCE AS
+CREATE OR REPLACE VIEW view_analysis_project_finance AS
 SELECT
     p.id_project,
     p.project_from AS acquisition_channel,
     p.created_at,
     p.status,
-    COALESCE(0, 0) AS total_revenue, -- Simplificado
-    COALESCE(0, 0) AS total_project_cost,
-    COALESCE(0, 0) AS profit_margin,
-    'Outras Etapas' AS funnel_stage
+    COALESCE(b.total_cost, 0) AS total_revenue,
+    COALESCE(b.material_cost, 0) + COALESCE(b.service_cost, 0) AS total_project_cost,
+    COALESCE(b.total_cost, 0) - (COALESCE(b.material_cost, 0) + COALESCE(b.service_cost, 0)) AS profit_margin,
+    CASE
+        WHEN p.status IN ('NEW', 'PRE_BUDGET', 'NEGOTIATION_FAILED', 'RETRYING', 'CLIENT_AWAITING_CONTACT', 'AWAITING_RETRY', 'SCHEDULED_TECHNICAL_VISIT', 'TECHNICAL_VISIT_COMPLETED', 'AWAITING_MATERIALS') THEN 'Leads'
+        WHEN p.status IN ('FINAL_BUDGET', 'SCHEDULED_INSTALLING_VISIT') THEN 'Contrato Assinado'
+        WHEN p.status IN ('INSTALLED', 'COMPLETED') THEN 'Instalado/Finalizado'
+        ELSE 'Outras Etapas'
+    END AS funnel_stage
 FROM
-    project p;
+    project p
+LEFT JOIN
+    budget b ON b.fk_project = p.id_project
+WHERE
+    p.is_active = true;
+
+CREATE OR REPLACE VIEW view_analysis_kpis AS
+WITH ProjectCounts AS (
+    SELECT
+        COUNT(id_project) AS total_projects,
+        SUM(CASE WHEN status = 'COMPLETED' THEN 1 ELSE 0 END) AS completed_projects,
+        SUM(CASE WHEN status = 'NEW' THEN 1 ELSE 0 END) AS new_projects,
+        SUM(CASE WHEN status IN ('FINAL_BUDGET', 'INSTALLED', 'COMPLETED') THEN 1 ELSE 0 END) AS contracts_signed_projects
+    FROM
+        project
+    WHERE
+        is_active = true
+),
+FinancialSummary AS (
+    SELECT
+        acquisition_channel,
+        SUM(total_project_cost) AS total_cost_by_channel,
+        ROW_NUMBER() OVER (ORDER BY SUM(total_project_cost) DESC) as rn
+    FROM
+        view_analysis_project_finance
+    GROUP BY
+        acquisition_channel
+)
+SELECT
+    (SELECT SUM(profit_margin) FROM view_analysis_project_finance) AS total_profit_margin,
+    (SELECT acquisition_channel FROM FinancialSummary WHERE rn = 1) AS most_costly_channel,
+    (PC.completed_projects * 100.0 / NULLIF(PC.total_projects, 0)) AS project_completion_rate,
+    (PC.contracts_signed_projects * 100.0 / NULLIF(PC.new_projects, 0)) AS funnel_conversion_rate
+FROM
+    ProjectCounts PC;
+
+CREATE OR REPLACE VIEW view_analysis_acquisition_channels AS
+WITH ChannelCounts AS (
+    SELECT
+        acquisition_channel,
+        COUNT(id_project) AS channel_project_count
+    FROM
+        view_analysis_project_finance
+    GROUP BY
+        acquisition_channel
+),
+TotalProjects AS (
+    SELECT COUNT(id_project) AS total_projects FROM project WHERE is_active = true
+)
+SELECT
+    CC.acquisition_channel AS nome,
+    CC.channel_project_count,
+    (CC.channel_project_count * 100.0 / NULLIF((SELECT total_projects FROM TotalProjects), 0)) AS percentual
+FROM
+    ChannelCounts CC
+ORDER BY
+    percentual DESC;
+
+CREATE OR REPLACE VIEW view_analysis_profit_cost_monthly AS
+SELECT
+    YEAR(created_at) AS ano,
+    MONTH(created_at) AS mes,
+    SUM(total_project_cost) AS total_cost,
+    SUM(profit_margin) AS total_profit
+FROM
+    view_analysis_project_finance
+GROUP BY
+    YEAR(created_at), MONTH(created_at)
+ORDER BY
+    ano ASC, mes ASC;
+
+CREATE OR REPLACE VIEW view_analysis_projects_status_summary AS
+SELECT
+    CASE p.status
+        WHEN 'COMPLETED' THEN 'Finalizado'
+        WHEN 'NEGOTIATION_FAILED' THEN 'Finalizado'
+        WHEN 'SCHEDULED_TECHNICAL_VISIT' THEN 'Agendado'
+        WHEN 'SCHEDULED_INSTALLING_VISIT' THEN 'Agendado'
+        WHEN 'NEW' THEN 'Novo'
+        ELSE 'Em andamento'
+    END AS status_group,
+    COUNT(p.id_project) AS quantidade
+FROM
+    project p
+WHERE
+    p.is_active = true
+GROUP BY
+    status_group;
+
+CREATE OR REPLACE VIEW view_analysis_sales_funnel_stages AS
+SELECT
+    CASE
+        WHEN p.status IN ('NEW', 'PRE_BUDGET', 'NEGOTIATION_FAILED', 'RETRYING', 'CLIENT_AWAITING_CONTACT', 'AWAITING_RETRY', 'SCHEDULED_TECHNICAL_VISIT', 'TECHNICAL_VISIT_COMPLETED', 'AWAITING_MATERIALS') THEN 'Leads'
+        WHEN p.status IN ('FINAL_BUDGET', 'SCHEDULED_INSTALLING_VISIT') THEN 'Contrato Assinado'
+        WHEN p.status IN ('INSTALLED', 'COMPLETED') THEN 'Instalado/Finalizado'
+        ELSE 'Outras Etapas'
+    END AS etapa,
+    COUNT(p.id_project) AS valor
+FROM
+    project p
+WHERE
+    p.is_active = true AND p.status IN (
+        'NEW', 'PRE_BUDGET', 'NEGOTIATION_FAILED', 'RETRYING', 'CLIENT_AWAITING_CONTACT', 'AWAITING_RETRY', 'SCHEDULED_TECHNICAL_VISIT', 'TECHNICAL_VISIT_COMPLETED', 'AWAITING_MATERIALS',
+        'FINAL_BUDGET', 'SCHEDULED_INSTALLING_VISIT',
+        'INSTALLED', 'COMPLETED'
+    )
+GROUP BY
+    etapa;

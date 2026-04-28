@@ -66,7 +66,7 @@ if [[ "$BACKEND_TYPE" == "microservice" || -z "$BACKEND_TYPE" ]]; then
     if [ -d "services/backend/microservice" ]; then
         cd services/backend/microservice
         sudo docker compose pull
-        sudo docker compose --env-file ../../.env up -d --build
+        sudo docker compose --env-file ../../../.env up -d --build
         cd ../../..
     else
         echo "âŒ Erro: Diretório services/backend/microservice nÃ£o encontrado!"

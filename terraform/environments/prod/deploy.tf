@@ -146,7 +146,8 @@ resource "aws_ssm_association" "env_db" {
       "EOF",
       "chmod +x /tmp/solarway/setup-app.sh",
       "sed -i 's/\\r$//' /tmp/solarway/setup-app.sh",
-      "sudo bash /tmp/solarway/setup-app.sh"
+      "sudo bash /tmp/solarway/setup-app.sh",
+      "sudo docker exec -i mysql-db mysql -u root -p'${var.db_password}' solarway < /tmp/solarway/services/db/mysql-init/init.sql"
     ] : replace(s, "\r", "")]))}' | base64 -d | bash"
   }
 }
@@ -178,6 +179,7 @@ resource "aws_ssm_association" "env_backend_1" {
         aws_session_token   = var.aws_session_token
         rabbitmq_default_user = var.rabbitmq_default_user
         rabbitmq_default_pass = var.rabbitmq_default_pass
+        microservice_private_ip = module.ec2_backend_2.private_ip
       }),
       "ENVEOF",
       "cat > /tmp/solarway/services/backend/monolith/docker-compose.yml << 'COMPOSEEOF'",
@@ -221,6 +223,7 @@ resource "aws_ssm_association" "env_backend_2" {
         aws_session_token   = var.aws_session_token
         rabbitmq_default_user = var.rabbitmq_default_user
         rabbitmq_default_pass = var.rabbitmq_default_pass
+        microservice_private_ip = module.ec2_backend_2.private_ip
       }),
       "ENVEOF",
       "cat > /tmp/solarway/services/backend/microservice/docker-compose.yml << 'COMPOSEEOF'",
@@ -402,6 +405,7 @@ resource "aws_ssm_association" "env_proxy" {
       "INSTITUCIONAL_PRIVATE_IP=${module.ec2_frontend_1.private_ip}",
       "N8N_PRIVATE_IP=${module.ec2_chatbot.private_ip}",
       "WAHA_PRIVATE_IP=${module.ec2_chatbot.private_ip}",
+      "MICROSERVICE_PRIVATE_IP=${module.ec2_backend_2.private_ip}",
       "DOMAIN=${var.domain}",
       "EMAIL=${var.email}",
       "GITHUB_USERNAME=${var.github_username}",

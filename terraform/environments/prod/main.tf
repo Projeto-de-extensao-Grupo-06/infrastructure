@@ -47,7 +47,7 @@ module "ec2_nginx" {
   instance_type        = "t3.small"
   vpc_id               = module.vpc_prod.vpc_id
   subnet_id            = module.vpc_prod.public_subnet_ids[0]
-  frontend_ports       = [80, 443, 3000, 5678, 8081]
+  frontend_ports       = [80, 443, 3000, 5678, 8081, 15672]
   iam_instance_profile = "LabInstanceProfile"
   source_dest_check    = false
 
@@ -187,7 +187,7 @@ module "ec2_backend_2" {
   instance_type        = "t3.medium"
   vpc_id               = module.vpc_prod.vpc_id
   subnet_id            = module.vpc_prod.private_subnet_ids[1]
-  frontend_ports       = [8082] # Apenas Microserviço
+  frontend_ports       = [8082, 5672, 15672] # Microserviço e RabbitMQ
   allowed_cidr_blocks  = ["10.0.0.0/24"]
   iam_instance_profile = "LabInstanceProfile"
   user_data = <<-EOT
