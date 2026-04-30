@@ -44,6 +44,7 @@ if [ -f "$BASE_DIR/.env" ]; then
     export WAHA_PRIVATE_IP=$(grep WAHA_PRIVATE_IP "$BASE_DIR/.env" | cut -d'=' -f2 | tr -d '\r')
     export DOMAIN=$(grep DOMAIN "$BASE_DIR/.env" | cut -d'=' -f2 | tr -d '\r')
     export EMAIL=$(grep EMAIL "$BASE_DIR/.env" | cut -d'=' -f2 | tr -d '\r')
+    export MICROSERVICE_PRIVATE_IP=$(grep MICROSERVICE_PRIVATE_IP "$BASE_DIR/.env" | cut -d'=' -f2 | tr -d '\r')
 else
     echo "[PROD-PROXY] .env nÃ£o encontrado em $BASE_DIR. Abortando."
     exit 1
@@ -58,7 +59,7 @@ echo "      n8n/WAHA:        ${N8N_PRIVATE_IP}:5678/3000"
 
 echo "[PROD-PROXY] Processando nginx.conf.template com envsubst..."
 cd "$PROXY_DIR"
-envsubst '${BACKEND_PRIVATE_IP} ${MANAGEMENT_PRIVATE_IP} ${INSTITUCIONAL_PRIVATE_IP} ${N8N_PRIVATE_IP} ${WAHA_PRIVATE_IP} ${DOMAIN}' \
+envsubst '${BACKEND_PRIVATE_IP} ${MANAGEMENT_PRIVATE_IP} ${INSTITUCIONAL_PRIVATE_IP} ${N8N_PRIVATE_IP} ${WAHA_PRIVATE_IP} ${DOMAIN} ${MICROSERVICE_PRIVATE_IP}' \
     < nginx.conf.template > nginx.conf
 
 echo "[PROD-PROXY] nginx.conf gerado:"
